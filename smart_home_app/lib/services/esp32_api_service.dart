@@ -9,11 +9,18 @@ class Esp32ApiService {
 
   Esp32ApiService({
     this.baseUrl = 'http://192.168.4.1',
-    this.timeout = const Duration(seconds: 3),
+    this.timeout = const Duration(seconds: 5),
   });
 
   String _cleanUrl(String endpoint) {
     var base = baseUrl.trim();
+    // Strip leading schemes if duplicated
+    while (base.startsWith('http://http://')) {
+      base = base.substring(7);
+    }
+    while (base.startsWith('https://http://')) {
+      base = base.substring(8);
+    }
     if (!base.startsWith('http://') && !base.startsWith('https://')) {
       base = 'http://$base';
     }

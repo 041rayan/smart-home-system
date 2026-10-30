@@ -76,6 +76,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         horizontal: 14, vertical: 12),
                   ),
                 ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ActionChip(
+                      label: const Text('192.168.4.1 (Hotspot)'),
+                      backgroundColor: const Color(0xFF262A33),
+                      labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
+                      onPressed: () {
+                        _ipController.text = '192.168.4.1';
+                      },
+                    ),
+                    ActionChip(
+                      label: const Text('192.168.0.233 (Home Wi-Fi)'),
+                      backgroundColor: const Color(0xFF262A33),
+                      labelStyle: const TextStyle(color: Color(0xFF3DDC84), fontSize: 12),
+                      onPressed: () {
+                        _ipController.text = '192.168.0.233';
+                      },
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -83,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: () {
                         provider.setEsp32Ip(_ipController.text);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('ESP32 IP updated! Connecting...')),
+                          SnackBar(content: Text('Connecting to ${_ipController.text}...')),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -105,6 +127,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: const Text('Reset Default'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF14171D),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC43D)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Connection Help',
+                            style: TextStyle(
+                              color: Color(0xFFFFC43D),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        '• Option A (Hotspot): Connect phone Wi-Fi to "ESP32-Home" (pw: 12345678). IMPORTANT: Turn OFF Mobile Data on your phone so Android doesn\'t bypass local traffic!\n• Option B (Home Wi-Fi): If phone is on "SSH_E_517", use IP 192.168.0.233.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

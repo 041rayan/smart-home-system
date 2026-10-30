@@ -28,7 +28,7 @@ class HomeProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   HomeProvider() {
-    _apiService = Esp32ApiService(baseUrl: 'http://$_esp32Ip');
+    _apiService = Esp32ApiService(baseUrl: _esp32Ip);
     _loadPreferences();
   }
 
@@ -37,7 +37,7 @@ class HomeProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _esp32Ip = prefs.getString('esp32_ip') ?? '192.168.4.1';
       _isDemoMode = prefs.getBool('demo_mode') ?? false;
-      _apiService = Esp32ApiService(baseUrl: 'http://$_esp32Ip');
+      _apiService = Esp32ApiService(baseUrl: _esp32Ip);
 
       if (_isDemoMode) {
         _initDemoState();
@@ -105,7 +105,7 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> setEsp32Ip(String ip) async {
     _esp32Ip = ip.trim();
-    _apiService = Esp32ApiService(baseUrl: 'http://$_esp32Ip');
+    _apiService = Esp32ApiService(baseUrl: _esp32Ip);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('esp32_ip', _esp32Ip);
 

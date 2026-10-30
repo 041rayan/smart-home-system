@@ -16,14 +16,23 @@
 */
 
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <ESP32Servo.h>
 #include <DHT.h>
 
 // ================= CONFIG =================
-const char* WIFI_SSID = "SSH_E_517";
-const char* WIFI_PASS = "66657583";
+// Known Wi-Fi networks (ESP32 will connect to whichever is available)
+WiFiMulti wifiMulti;
+struct WiFiCred {
+  const char* ssid;
+  const char* pass;
+};
+const WiFiCred KNOWN_WIFIS[] = {
+  { "SSH_E_518", "49082623" },
+  { "SSH_E_517", "66657583" },
+};
 
 // ---- Pins ----
 #define PIN_TRIG 5         // HC-SR04 TRIG
@@ -370,6 +379,10 @@ void handleSerial() {
                     flameActiveLow ? "Active-LOW" : "Active-HIGH",
                     doorOpen ? "OPEN" : "CLOSED", doorOpen ? DOOR_OPEN_ANGLE : DOOR_CLOSED_ANGLE,
                     bulbOn ? "ON" : "OFF", fanOn ? "ON" : "OFF");
+    } else if (cmd.equalsIgnoreCase("ip") || cmd.equalsIgnoreCase("wifi")) {
+      Serial.printf("[WIFI] STA: %s (SSID: %s) | AP: %s\n",
+                    WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : "Disconnected",
+                    WiFi.SSID().c_str(), WiFi.softAPIP().toString().c_str());
     }
   }
 }
@@ -397,11 +410,30 @@ void setup() {
   doorServo.attach(PIN_SERVO, 544, 2400); // Standard 544us - 2400us range
   applyDoor();  // door closed at start
 
-  WiFi.mode(WIFI_AP);
+  // Dual mode: Connect to router WiFi AND keep Hotspot alive simultaneously
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP("ESP32-Home", "12345678");
-  delay(5000);
   Serial.print("\nHotspot 'ESP32-Home' (pw 12345678) at ");
   Serial.println(WiFi.softAPIP());
+
+  Serial.println("Connecting to Wi-Fi...");
+  for (const auto& cred : KNOWN_WIFIS) {
+    wifiMulti.addAP(cred.ssid, cred.pass);
+    Serial.printf("  Added network: %s\n", cred.ssid);
+  }
+
+  unsigned long t0 = millis();
+  while (wifiMulti.run() != WL_CONNECTED && millis() - t0 < 12000) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf("\n[WIFI] Connected to '%s'! Local IP: ", WiFi.SSID().c_str());
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\n[WIFI] Router Wi-Fi not connected yet. Hotspot 'ESP32-Home' is active at 192.168.4.1.");
+  }
 
   if (MDNS.begin("esp32-home")) Serial.println("Open http://esp32-home.local");
 
@@ -416,15 +448,25 @@ void setup() {
   updateSensors();
 }
 
+unsigned long lastWifiCheck = 0;
+
 void loop() {
   server.handleClient();
   handleSerial();
+
+  // Periodically ensure Wi-Fi stays connected
+  if (WiFi.status() != WL_CONNECTED && millis() - lastWifiCheck >= 10000) {
+    lastWifiCheck = millis();
+    wifiMulti.run();
+  }
 
   // Read sensors every 2 seconds
   if (millis() - lastSensorMs >= 2000) {
     lastSensorMs = millis();
     updateSensors();
-    Serial.printf("[STATUS] Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%%\n",
+    String ipStr = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : "No-STA";
+    Serial.printf("[STATUS] IP:%s | Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%%\n",
+                  ipStr.c_str(),
                   fireDetected ? "FIRE ALERT!" : "OK", rawFlame,
                   doorOpen ? "OPEN" : "CLOSED",
                   tempC, humidity, tankPercent);
