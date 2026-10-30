@@ -76,11 +76,11 @@ class _FireAlertBannerState extends State<FireAlertBanner>
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'FIRE HAZARD DETECTED',
                       style: TextStyle(
                         fontSize: 16,
@@ -89,10 +89,12 @@ class _FireAlertBannerState extends State<FireAlertBanner>
                         color: AppColors.textWhite,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Flame sensor active • Check area immediately',
-                      style: TextStyle(
+                      state.fireHold > 0 && state.fireRaw == 1
+                          ? 'Flame off • Safety alert active (${state.fireHold}s remaining)'
+                          : 'Flame sensor active • Check area immediately',
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.softPink,
                       ),

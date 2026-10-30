@@ -5,6 +5,7 @@ class HomeState {
   final double? humidity;
   final bool fireDetected;
   final int fireRaw;
+  final int fireHold;
   final bool flameActiveLow;
   final bool doorOpen;
   final bool bulbOn;
@@ -18,6 +19,7 @@ class HomeState {
     this.humidity,
     this.fireDetected = false,
     this.fireRaw = 0,
+    this.fireHold = 0,
     this.flameActiveLow = false,
     this.doorOpen = false,
     this.bulbOn = false,
@@ -33,6 +35,7 @@ class HomeState {
       humidity: null,
       fireDetected: false,
       fireRaw: 0,
+      fireHold: 0,
       flameActiveLow: false,
       doorOpen: false,
       bulbOn: false,
@@ -72,6 +75,7 @@ class HomeState {
       humidity: hum,
       fireDetected: json['fire'] == true,
       fireRaw: (json['fireRaw'] as num?)?.toInt() ?? 0,
+      fireHold: (json['fireHold'] as num?)?.toInt() ?? 0,
       flameActiveLow: json['flameActiveLow'] == true,
       doorOpen: json['door'] == true,
       bulbOn: json['bulb'] == true,
@@ -87,6 +91,7 @@ class HomeState {
     double? humidity,
     bool? fireDetected,
     int? fireRaw,
+    int? fireHold,
     bool? flameActiveLow,
     bool? doorOpen,
     bool? bulbOn,
@@ -100,6 +105,7 @@ class HomeState {
       humidity: humidity ?? this.humidity,
       fireDetected: fireDetected ?? this.fireDetected,
       fireRaw: fireRaw ?? this.fireRaw,
+      fireHold: fireHold ?? this.fireHold,
       flameActiveLow: flameActiveLow ?? this.flameActiveLow,
       doorOpen: doorOpen ?? this.doorOpen,
       bulbOn: bulbOn ?? this.bulbOn,

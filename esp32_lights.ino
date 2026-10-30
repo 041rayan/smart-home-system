@@ -59,6 +59,9 @@ const int DOOR_OPEN_ANGLE = 90;
 const bool RELAY_ACTIVE_LOW = true;  // set true if relay turns ON when pin is LOW
 bool flameActiveLow = true;          // true = Active-LOW (LM393 default: DO=1 clear, DO=0 fire)
 int rawFlame = 1;                    // raw digital pin reading (1 = clear in active-low)
+unsigned long lastFireSeenMs = 0;    // timestamp when flame was last detected
+const unsigned long FIRE_HOLD_MS = 10000; // Hold alert for 10 seconds after flame goes off
+int fireHoldSec = 0;                 // remaining seconds in safety hold window
 // ==========================================
 
 WebServer server(80);
@@ -133,7 +136,22 @@ void checkFlameSensor() {
     delayMicroseconds(200);
   }
   rawFlame = (lowCount >= 3) ? LOW : HIGH;
-  fireDetected = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
+  bool rawFire = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
+
+  if (rawFire) {
+    lastFireSeenMs = millis();
+    fireDetected = true;
+    fireHoldSec = 10;
+  } else {
+    // Keep alert active for 10 seconds after flame goes off
+    if (lastFireSeenMs > 0 && (millis() - lastFireSeenMs < FIRE_HOLD_MS)) {
+      fireDetected = true;
+      fireHoldSec = (int)((FIRE_HOLD_MS - (millis() - lastFireSeenMs) + 999) / 1000);
+    } else {
+      fireDetected = false;
+      fireHoldSec = 0;
+    }
+  }
 }
 
 void updateSensors() {
@@ -170,6 +188,7 @@ String stateJson() {
   s += "\"hum\":" + num(humidity, 0) + ",";
   s += "\"fire\":" + String(fireDetected ? "true" : "false") + ",";
   s += "\"fireRaw\":" + String(rawFlame) + ",";
+  s += "\"fireHold\":" + String(fireHoldSec) + ",";
   s += "\"flameActiveLow\":" + String(flameActiveLow ? "true" : "false") + ",";
   s += "\"door\":" + String(doorOpen ? "true" : "false") + ",";
   s += "\"bulb\":" + String(bulbOn ? "true" : "false") + ",";
@@ -477,9 +496,17 @@ void loop() {
     lastSensorMs = millis();
     updateSensors();
     String ipStr = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : "No-STA";
+    String fireStr = "OK";
+    if (fireDetected) {
+      if (fireHoldSec > 0 && !((flameActiveLow && rawFlame == LOW) || (!flameActiveLow && rawFlame == HIGH))) {
+        fireStr = "HOLD (" + String(fireHoldSec) + "s)";
+      } else {
+        fireStr = "FIRE ALERT!";
+      }
+    }
     Serial.printf("[STATUS] IP:%s | Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%%\n",
                   ipStr.c_str(),
-                  fireDetected ? "FIRE ALERT!" : "OK", rawFlame,
+                  fireStr.c_str(), rawFlame,
                   doorOpen ? "OPEN" : "CLOSED",
                   tempC, humidity, tankPercent);
   }
