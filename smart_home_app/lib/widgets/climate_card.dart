@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../theme/app_theme.dart';
 
 class ClimateCard extends StatelessWidget {
   const ClimateCard({super.key});
@@ -13,25 +14,41 @@ class ClimateCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1D24),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white10),
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.cardBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'ROOM CLIMATE',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
-              color: Color(0xFF8B909A),
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPink.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.thermostat_outlined,
+                  color: AppColors.primaryPink,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Indoor Climate',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textWhite,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Row(
             children: [
               // Temperature
@@ -41,12 +58,12 @@ class ClimateCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF9F0A).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.primaryPink.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
-                        Icons.thermostat,
-                        color: Color(0xFFFF9F0A),
+                        Icons.device_thermostat,
+                        color: AppColors.softPink,
                         size: 26,
                       ),
                     ),
@@ -58,15 +75,16 @@ class ClimateCard extends StatelessWidget {
                           temp != null ? '${temp.toStringAsFixed(1)}°C' : '--',
                           style: const TextStyle(
                             fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
+                            color: AppColors.textWhite,
                           ),
                         ),
                         const Text(
                           'Temperature',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF8B909A),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -74,7 +92,11 @@ class ClimateCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(width: 1, height: 42, color: Colors.white10),
+              Container(
+                width: 1,
+                height: 40,
+                color: AppColors.cardBorder,
+              ),
               const SizedBox(width: 16),
               // Humidity
               Expanded(
@@ -83,12 +105,12 @@ class ClimateCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3D9BFF).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.coolBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
                         Icons.water_drop,
-                        color: Color(0xFF3D9BFF),
+                        color: AppColors.coolBlue,
                         size: 26,
                       ),
                     ),
@@ -100,15 +122,16 @@ class ClimateCard extends StatelessWidget {
                           hum != null ? '${hum.toStringAsFixed(0)}%' : '--',
                           style: const TextStyle(
                             fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
+                            color: AppColors.textWhite,
                           ),
                         ),
                         const Text(
                           'Humidity',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF8B909A),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],

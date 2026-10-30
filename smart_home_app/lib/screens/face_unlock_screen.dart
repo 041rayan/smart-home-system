@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
 import '../services/face_unlock_service.dart';
+import '../theme/app_theme.dart';
 
 enum FaceUnlockStatus { idle, scanning, success, failed }
 
@@ -17,7 +18,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     with SingleTickerProviderStateMixin {
   final FaceUnlockService _faceService = FaceUnlockService();
   FaceUnlockStatus _status = FaceUnlockStatus.idle;
-  String _statusMessage = 'Position your face in front of the screen';
+  String _statusMessage = 'Position your face in front of the camera';
   int _countdown = 4;
   Timer? _countdownTimer;
 
@@ -31,11 +32,11 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+    _pulseAnimation = Tween<double>(begin: 0.96, end: 1.04).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Auto-trigger biometric scan after screen transition
+    // Auto-trigger biometric scan after screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startFaceScan();
     });
@@ -53,11 +54,11 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
 
     setState(() {
       _status = FaceUnlockStatus.scanning;
-      _statusMessage = 'Authenticating face with device biometrics...';
+      _statusMessage = 'Verifying facial credentials...';
     });
 
     if (provider.isDemoMode) {
-      await Future.delayed(const Duration(milliseconds: 1400));
+      await Future.delayed(const Duration(milliseconds: 1200));
       _onFaceRecognized();
       return;
     }
@@ -66,14 +67,13 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     if (!isAvailable) {
       setState(() {
         _status = FaceUnlockStatus.failed;
-        _statusMessage =
-            'Biometrics not enrolled or unavailable. You can use Demo Mode in Settings or simulate unlock below.';
+        _statusMessage = 'Biometric security not configured on this device.';
       });
       return;
     }
 
     final success = await _faceService.authenticateWithFace(
-      reason: 'Scan your face to unlock the ESP32 Door',
+      reason: 'Scan your face to unlock the door',
     );
 
     if (success && mounted) {
@@ -81,7 +81,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     } else if (mounted) {
       setState(() {
         _status = FaceUnlockStatus.failed;
-        _statusMessage = 'Face authentication failed or was canceled.';
+        _statusMessage = 'Authentication unverified. Please try again.';
       });
     }
   }
@@ -91,14 +91,12 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
 
     setState(() {
       _status = FaceUnlockStatus.success;
-      _statusMessage = '✓ Face Verified! Door Unlocked (GPIO 13 @ 90°)';
+      _statusMessage = 'Identity Confirmed • Door Access Granted';
       _countdown = 4;
     });
 
-    // Send unlock to ESP32 servo
     provider.unlockDoorWithFace();
 
-    // Start auto-lock countdown
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       if (_countdown > 1) {
@@ -110,7 +108,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
         if (mounted) {
           setState(() {
             _status = FaceUnlockStatus.idle;
-            _statusMessage = 'Door locked. Tap below to scan again.';
+            _statusMessage = 'Door locked. Tap below to authenticate.';
           });
         }
       }
@@ -124,29 +122,29 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
 
     switch (_status) {
       case FaceUnlockStatus.idle:
-        accentColor = const Color(0xFF3D9BFF);
-        centerIcon = Icons.face;
+        accentColor = AppColors.softPink;
+        centerIcon = Icons.face_rounded;
         break;
       case FaceUnlockStatus.scanning:
-        accentColor = const Color(0xFFFFC43D);
-        centerIcon = Icons.face_retouching_natural;
+        accentColor = AppColors.primaryPink;
+        centerIcon = Icons.face_retouching_natural_rounded;
         break;
       case FaceUnlockStatus.success:
-        accentColor = const Color(0xFF3DDC84);
-        centerIcon = Icons.check_circle_outline;
+        accentColor = AppColors.online;
+        centerIcon = Icons.check_circle_outline_rounded;
         break;
       case FaceUnlockStatus.failed:
-        accentColor = const Color(0xFFFF453A);
-        centerIcon = Icons.face_unlock_rounded;
+        accentColor = AppColors.fireAlert;
+        centerIcon = Icons.error_outline_rounded;
         break;
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('Face Unlock'),
+        title: const Text('Biometric Door Access'),
       ),
       body: SafeArea(
         child: Padding(
@@ -163,19 +161,19 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                       ScaleTransition(
                         scale: _pulseAnimation,
                         child: Container(
-                          width: 220,
-                          height: 220,
+                          width: 210,
+                          height: 210,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF1A1D24),
+                            color: AppColors.cardSurface,
                             border: Border.all(
                               color: accentColor,
-                              width: 3,
+                              width: 2.5,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: accentColor.withValues(alpha: 0.25),
-                                blurRadius: 28,
+                                blurRadius: 30,
                                 spreadRadius: 4,
                               ),
                             ],
@@ -183,10 +181,10 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Scanner reticle crosshairs
+                              // Scanner reticle
                               Container(
-                                width: 170,
-                                height: 170,
+                                width: 160,
+                                height: 160,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
@@ -197,7 +195,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                               ),
                               Icon(
                                 centerIcon,
-                                size: 90,
+                                size: 84,
                                 color: accentColor,
                               ),
                             ],
@@ -226,7 +224,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF8B909A),
+                          color: AppColors.textSecondary,
                           height: 1.4,
                         ),
                       ),
@@ -236,15 +234,15 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF14301F),
+                            color: AppColors.online.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                                color: const Color(0xFF3DDC84).withValues(alpha: 0.5)),
+                                color: AppColors.online.withValues(alpha: 0.4)),
                           ),
                           child: Text(
-                            'Auto-locking in ${_countdown}s...',
+                            'Auto-locking in ${_countdown}s…',
                             style: const TextStyle(
-                              color: Color(0xFF3DDC84),
+                              color: AppColors.online,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -256,7 +254,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                 ),
               ),
 
-              // Action Buttons
+              // Action button
               if (_status != FaceUnlockStatus.scanning) ...[
                 SizedBox(
                   width: double.infinity,
@@ -265,33 +263,25 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                     onPressed: _startFaceScan,
                     icon: const Icon(Icons.face_unlock_rounded),
                     label: Text(
-                      _status == FaceUnlockStatus.failed ? 'Retry Face Scan' : 'Scan Face to Unlock',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      _status == FaceUnlockStatus.failed
+                          ? 'Retry Face Verification'
+                          : 'Authenticate Face',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3D9BFF),
+                      backgroundColor: AppColors.primaryPink,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Simulate button for testing
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton.icon(
-                    onPressed: _onFaceRecognized,
-                    icon: const Icon(Icons.touch_app, size: 16),
-                    label: const Text('Simulate Authorized Face (Demo)'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF8B909A),
-                    ),
-                  ),
-                ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
             ],
           ),
         ),

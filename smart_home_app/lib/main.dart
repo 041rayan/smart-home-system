@@ -4,16 +4,17 @@ import 'package:provider/provider.dart';
 import 'providers/home_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style
+  // Set immersive system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF0F1115),
+      systemNavigationBarColor: AppColors.background,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -37,20 +38,9 @@ class SmartHomeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ESP32 Smart Home',
+      title: 'Smart Home',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F1115),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF3D9BFF),
-          secondary: Color(0xFFFFC43D),
-          surface: Color(0xFF1A1D24),
-          error: Color(0xFFFF453A),
-        ),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
+      theme: AppTheme.darkTheme,
       home: const HomeScreen(),
     );
   }

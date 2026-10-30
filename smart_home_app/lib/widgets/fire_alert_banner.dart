@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../theme/app_theme.dart';
 
 class FireAlertBanner extends StatefulWidget {
   const FireAlertBanner({super.key});
@@ -21,7 +22,7 @@ class _FireAlertBannerState extends State<FireAlertBanner>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
+    _pulseAnim = Tween<double>(begin: 0.98, end: 1.02).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
     );
   }
@@ -45,13 +46,17 @@ class _FireAlertBannerState extends State<FireAlertBanner>
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF4A1616),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFFF453A), width: 2),
-            boxShadow: [
+            gradient: const LinearGradient(
+              colors: [Color(0xFF380816), Color(0xFF1E0710)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primaryPink, width: 2),
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0xFFFF453A).withValues(alpha: 0.4),
-                blurRadius: 16,
+                color: AppColors.pinkGlow,
+                blurRadius: 20,
                 spreadRadius: 2,
               )
             ],
@@ -61,47 +66,39 @@ class _FireAlertBannerState extends State<FireAlertBanner>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF453A).withValues(alpha: 0.2),
+                  color: AppColors.primaryPink.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.local_fire_department,
-                  color: Color(0xFFFF453A),
-                  size: 32,
+                  color: AppColors.primaryPink,
+                  size: 28,
                 ),
               ),
               const SizedBox(width: 14),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '🔥 FIRE DETECTED!',
+                    Text(
+                      'FIRE HAZARD DETECTED',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        color: AppColors.textWhite,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 2),
                     Text(
-                      'Check immediately! DO Pin: ${state.fireRaw == 1 ? "HIGH" : "LOW"}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFFFF9F0A),
+                      'Flame sensor active • Check area immediately',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.softPink,
                       ),
                     ),
                   ],
                 ),
-              ),
-              TextButton(
-                onPressed: () => provider.invertFlameLogic(),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.black26,
-                  foregroundColor: Colors.white70,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                ),
-                child: const Text('Invert', style: TextStyle(fontSize: 12)),
               ),
             ],
           ),
@@ -109,59 +106,74 @@ class _FireAlertBannerState extends State<FireAlertBanner>
       );
     }
 
-    // Normal safe condition
+    // Normal secure status
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1D24),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: AppColors.cardBorder, width: 1),
       ),
       child: Row(
         children: [
           Container(
-            width: 14,
-            height: 14,
-            decoration: const BoxDecoration(
-              color: Color(0xFF3DDC84),
-              shape: BoxShape.circle,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.online.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.shield_outlined,
+              color: AppColors.online,
+              size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'No fire detected',
+                Text(
+                  'Safety Systems',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textWhite,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  'Flame sensor OK • Pin DO: ${state.fireRaw == 1 ? "HIGH" : "LOW"} (${state.flameActiveLow ? "Active-LOW" : "Active-HIGH"})',
-                  style: const TextStyle(
+                  'Sensors active • Environment normal',
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF8B909A),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          OutlinedButton(
-            onPressed: () => provider.invertFlameLogic(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF8B909A),
-              side: const BorderSide(color: Color(0xFF3A3F4B)),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.online.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text('Invert', style: TextStyle(fontSize: 12)),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check, color: AppColors.online, size: 13),
+                SizedBox(width: 4),
+                Text(
+                  'SECURE',
+                  style: TextStyle(
+                    color: AppColors.online,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

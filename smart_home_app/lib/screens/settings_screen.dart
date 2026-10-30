@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,6 +12,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _ipController;
+  bool _advancedExpanded = false;
 
   @override
   void initState() {
@@ -30,101 +32,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final provider = context.watch<HomeProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('Settings & Testing'),
+        title: const Text('System Settings'),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         children: [
           // Connection Section
-          _buildSectionHeader('ESP32 CONNECTION'),
+          _buildSectionHeader('ESP32 CONTROLLER CONNECTION'),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1D24),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
+              color: AppColors.cardSurface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'ESP32 IP / Hostname',
+                  'Controller IP Address',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textWhite,
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _ipController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: AppColors.textWhite),
                   decoration: InputDecoration(
-                    hintText: '192.168.4.1',
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintText: '192.168.0.233 or 192.168.4.1',
+                    hintStyle: const TextStyle(color: AppColors.textMuted),
                     filled: true,
-                    fillColor: const Color(0xFF262A33),
+                    fillColor: AppColors.cardElevated,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.cardBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.primaryPink, width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                        horizontal: 16, vertical: 14),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   children: [
                     ActionChip(
-                      label: const Text('192.168.4.1 (Hotspot)'),
-                      backgroundColor: const Color(0xFF262A33),
-                      labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
-                      onPressed: () {
-                        _ipController.text = '192.168.4.1';
-                      },
-                    ),
-                    ActionChip(
-                      label: const Text('192.168.0.233 (Home Wi-Fi)'),
-                      backgroundColor: const Color(0xFF262A33),
-                      labelStyle: const TextStyle(color: Color(0xFF3DDC84), fontSize: 12),
+                      label: const Text('Home Wi-Fi (192.168.0.233)'),
+                      backgroundColor: AppColors.cardElevated,
+                      side: const BorderSide(color: AppColors.cardBorder),
+                      labelStyle: const TextStyle(
+                        color: AppColors.online,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                       onPressed: () {
                         _ipController.text = '192.168.0.233';
                       },
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        provider.setEsp32Ip(_ipController.text);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Connecting to ${_ipController.text}...')),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3D9BFF),
-                        foregroundColor: Colors.white,
+                    ActionChip(
+                      label: const Text('Direct Hotspot (192.168.4.1)'),
+                      backgroundColor: AppColors.cardElevated,
+                      side: const BorderSide(color: AppColors.cardBorder),
+                      labelStyle: const TextStyle(
+                        color: AppColors.softPink,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
-                      child: const Text('Save & Connect'),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
                       onPressed: () {
                         _ipController.text = '192.168.4.1';
-                        provider.setEsp32Ip('192.168.4.1');
                       },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF8B909A),
-                        side: const BorderSide(color: Color(0xFF3A3F4B)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          provider.setEsp32Ip(_ipController.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Connecting to ${_ipController.text}...'),
+                              backgroundColor: AppColors.cardElevated,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryPink,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Save & Connect'),
                       ),
-                      child: const Text('Reset Default'),
                     ),
                   ],
                 ),
@@ -132,21 +144,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF14171D),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white12),
+                    color: AppColors.cardElevated,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
                   ),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC43D)),
+                          Icon(Icons.info_outline, size: 15, color: AppColors.softPink),
                           SizedBox(width: 6),
                           Text(
-                            'Connection Help',
+                            'Quick Network Tips',
                             style: TextStyle(
-                              color: Color(0xFFFFC43D),
+                              color: AppColors.softPink,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -155,8 +167,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       SizedBox(height: 6),
                       Text(
-                        '• Option A (Hotspot): Connect phone Wi-Fi to "ESP32-Home" (pw: 12345678). IMPORTANT: Turn OFF Mobile Data on your phone so Android doesn\'t bypass local traffic!\n• Option B (Home Wi-Fi): If phone is on "SSH_E_517", use IP 192.168.0.233.',
-                        style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                        '• Home Wi-Fi: Connect phone to "SSH_E_517" and use 192.168.0.233.\n• Direct Hotspot: Connect phone to "ESP32-Home" (pw: 12345678). Turn off Mobile Data so Android doesn\'t bypass local Wi-Fi.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),
@@ -169,26 +185,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Push Notifications Section
           _buildSectionHeader('PUSH NOTIFICATIONS'),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1D24),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
+              color: AppColors.cardSurface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.notifications_active, color: Color(0xFFFF453A)),
+                    Icon(Icons.notifications_active, color: AppColors.primaryPink, size: 22),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Fire Emergency Alerts',
+                        'Fire Alert Push Notifications',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                         ),
                       ),
                     ),
@@ -196,28 +212,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'The app uses high-priority local push notifications with vibration and critical sound when the flame sensor trips.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF8B909A)),
+                  'Immediate high-priority alert with custom vibration and alarm sound whenever the flame sensor detects fire.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
                 ),
                 const SizedBox(height: 14),
-                ElevatedButton.icon(
+                OutlinedButton.icon(
                   onPressed: () async {
                     await provider.testNotification();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Test Fire notification sent! Check notification tray.'),
-                          backgroundColor: Color(0xFFFF453A),
+                          content: Text('Test notification dispatched. Check status bar!'),
+                          backgroundColor: AppColors.primaryPink,
                         ),
                       );
                     }
                   },
-                  icon: const Icon(Icons.send),
-                  label: const Text('Send Test Fire Alert Notification'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF453A),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(42),
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: const Text('Send Test Alert Notification'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.softPink,
+                    side: const BorderSide(color: AppColors.cardBorder),
+                    minimumSize: const Size.fromHeight(44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
@@ -225,124 +244,134 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Feature Testing / Demo Mode Section
-          _buildSectionHeader('FEATURE SIMULATION / DEMO MODE'),
+          // Advanced Developer / Maintenance Section
+          _buildSectionHeader('DIAGNOSTICS & HARDWARE'),
           Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1D24),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
+              color: AppColors.cardSurface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Demo / Simulation Mode',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Test features without ESP32 connected',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF8B909A)),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: provider.isDemoMode,
-                      onChanged: (val) => provider.setDemoMode(val),
-                      activeThumbColor: const Color(0xFF3D9BFF),
-                    ),
-                  ],
-                ),
-                if (provider.isDemoMode) ...[
-                  const Divider(color: Colors.white10, height: 24),
-                  const Text(
-                    'Simulate Hardware Events:',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF8B909A),
-                    ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                initiallyExpanded: _advancedExpanded,
+                onExpansionChanged: (val) => setState(() => _advancedExpanded = val),
+                title: const Text(
+                  'Hardware Diagnostics & Tools',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textWhite,
                   ),
-                  const SizedBox(height: 12),
+                ),
+                subtitle: const Text(
+                  'Pin map, sweep test, and simulation',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                children: [
+                  const Divider(color: AppColors.cardBorder, height: 1),
+                  const SizedBox(height: 14),
+
+                  // Door sweep
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => provider.triggerDemoFire(true),
-                          icon: const Icon(Icons.local_fire_department, size: 18),
-                          label: const Text('Trigger Fire'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4A1616),
-                            foregroundColor: const Color(0xFFFF453A),
-                            side: const BorderSide(color: Color(0xFFFF453A)),
-                          ),
-                        ),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Test Door Servo',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textWhite)),
+                          Text('Runs full sweep 0° ➔ 90° ➔ 0°',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => provider.triggerDemoFire(false),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF3DDC84),
-                            side: const BorderSide(color: Color(0xFF3DDC84)),
-                          ),
-                          child: const Text('Clear Fire'),
+                      OutlinedButton(
+                        onPressed: () => provider.testDoorSweep(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.softPink,
+                          side: const BorderSide(color: AppColors.cardBorder),
                         ),
+                        child: const Text('Run Sweep'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Simulate Water Tank Level:',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF8B909A)),
+                  const SizedBox(height: 14),
+
+                  // Flame Sensor Invert
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Flame Logic Active Level',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textWhite)),
+                          Text(
+                            provider.state.flameActiveLow ? 'Active LOW' : 'Active HIGH',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                      OutlinedButton(
+                        onPressed: () => provider.invertFlameLogic(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.softPink,
+                          side: const BorderSide(color: AppColors.cardBorder),
+                        ),
+                        child: const Text('Toggle Logic'),
+                      ),
+                    ],
                   ),
-                  Slider(
-                    value: (provider.state.tankPercent ?? 50).toDouble(),
-                    min: 0,
-                    max: 100,
-                    divisions: 20,
-                    label: '${provider.state.tankPercent}%',
-                    activeColor: const Color(0xFF3D9BFF),
-                    onChanged: (val) => provider.updateDemoTank(val.toInt()),
+                  const SizedBox(height: 14),
+
+                  // Demo Mode
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Offline Simulation Mode',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textWhite)),
+                          Text('Test without live ESP32',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                      Switch(
+                        value: provider.isDemoMode,
+                        onChanged: (val) => provider.setDemoMode(val),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Pin Mapping
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardElevated,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: const Column(
+                      children: [
+                        _PinRow(feature: 'Water Ultrasonic TRIG', pin: 'GPIO 5'),
+                        _PinRow(feature: 'Water Ultrasonic ECHO', pin: 'GPIO 18'),
+                        _PinRow(feature: 'Flame Sensor DO', pin: 'GPIO 27'),
+                        _PinRow(feature: 'DHT11 Temp / Humidity', pin: 'GPIO 4'),
+                        _PinRow(feature: 'Door Servo Motor', pin: 'GPIO 13'),
+                        _PinRow(feature: 'Bulb Relay Module', pin: 'GPIO 22'),
+                        _PinRow(feature: 'Fan Relay Module', pin: 'GPIO 23'),
+                      ],
+                    ),
                   ),
                 ],
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Hardware Reference Section
-          _buildSectionHeader('HARDWARE PIN MAPPING'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1D24),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: const Column(
-              children: [
-                _PinRow(feature: 'Water Ultrasonic TRIG', pin: 'GPIO 5'),
-                _PinRow(feature: 'Water Ultrasonic ECHO', pin: 'GPIO 18'),
-                _PinRow(feature: 'Flame Sensor DO', pin: 'GPIO 27'),
-                _PinRow(feature: 'DHT11 Temp / Humidity', pin: 'GPIO 4'),
-                _PinRow(feature: 'Door Servo Motor', pin: 'GPIO 13'),
-                _PinRow(feature: 'Bulb Relay Module', pin: 'GPIO 22'),
-                _PinRow(feature: 'Fan Relay Module', pin: 'GPIO 23'),
-              ],
-            ),
-          ),
+          const SizedBox(height: 36),
         ],
       ),
     );
@@ -355,9 +384,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title,
         style: const TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
           letterSpacing: 0.8,
-          color: Color(0xFF8B909A),
+          color: AppColors.textMuted,
         ),
       ),
     );
@@ -373,23 +402,25 @@ class _PinRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(feature, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(feature, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFF262A33),
+              color: AppColors.cardSurface,
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.cardBorder),
             ),
             child: Text(
               pin,
               style: const TextStyle(
-                color: Color(0xFFFFC43D),
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryPink,
+                fontFamily: 'monospace',
               ),
             ),
           ),

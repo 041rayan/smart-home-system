@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
 import '../screens/face_unlock_screen.dart';
+import '../theme/app_theme.dart';
 
 class ControlButtons extends StatelessWidget {
   const ControlButtons({super.key});
@@ -10,50 +11,61 @@ class ControlButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<HomeProvider>();
     final state = provider.state;
+    final isDoorOpen = state.doorOpen;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'CONTROLS',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8B909A),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: Text(
+            'DEVICES & ACCESS',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+              color: AppColors.textMuted,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        // Door Card
+        const SizedBox(height: 6),
+
+        // Front Door Smart Access Card
         Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D24),
-            borderRadius: BorderRadius.circular(18),
+            color: AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: state.doorOpen
-                  ? const Color(0xFF3DDC84).withValues(alpha: 0.5)
-                  : Colors.white10,
+              color: isDoorOpen ? AppColors.primaryPink : AppColors.cardBorder,
+              width: isDoorOpen ? 1.5 : 1.0,
             ),
+            boxShadow: isDoorOpen
+                ? const [
+                    BoxShadow(
+                      color: AppColors.pinkGlow,
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                    )
+                  ]
+                : null,
           ),
           child: Column(
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: state.doorOpen
-                          ? const Color(0xFF14301F)
-                          : const Color(0xFF262A33),
-                      borderRadius: BorderRadius.circular(12),
+                      color: isDoorOpen
+                          ? AppColors.primaryPink.withValues(alpha: 0.15)
+                          : AppColors.cardElevated,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
-                      state.doorOpen ? Icons.door_sliding_outlined : Icons.door_front_door,
-                      color: state.doorOpen
-                          ? const Color(0xFF3DDC84)
-                          : const Color(0xFF8B909A),
+                      isDoorOpen ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                      color: isDoorOpen ? AppColors.primaryPink : AppColors.textSecondary,
                       size: 26,
                     ),
                   ),
@@ -63,52 +75,54 @@ class ControlButtons extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Door Servo (GPIO 13)',
+                          'Front Door Lock',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textWhite,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          state.doorOpen ? 'Open (90°)' : 'Closed (0°)',
+                          isDoorOpen ? 'Unlocked' : 'Securely Locked',
                           style: TextStyle(
                             fontSize: 13,
-                            color: state.doorOpen
-                                ? const Color(0xFF3DDC84)
-                                : const Color(0xFF8B909A),
+                            color: isDoorOpen ? AppColors.primaryPink : AppColors.textSecondary,
+                            fontWeight: isDoorOpen ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  // Toggle Button
-                  ElevatedButton(
-                    onPressed: () => provider.toggleDoor(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.doorOpen
-                          ? const Color(0xFF14301F)
-                          : const Color(0xFF262A33),
-                      foregroundColor: state.doorOpen
-                          ? const Color(0xFF3DDC84)
-                          : Colors.white,
-                      shape: RoundedRectangleBorder(
+                  // Lock/Unlock Button
+                  InkWell(
+                    onTap: () => provider.toggleDoor(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: isDoorOpen ? null : AppColors.primaryPinkGradient,
+                        color: isDoorOpen ? AppColors.cardElevated : null,
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: state.doorOpen
-                              ? const Color(0xFF3DDC84)
-                              : Colors.transparent,
+                        border: isDoorOpen
+                            ? Border.all(color: AppColors.primaryPink.withValues(alpha: 0.5))
+                            : null,
+                      ),
+                      child: Text(
+                        isDoorOpen ? 'LOCK' : 'UNLOCK',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          color: isDoorOpen ? AppColors.primaryPink : Colors.white,
                         ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
                     ),
-                    child: Text(state.doorOpen ? 'CLOSE' : 'OPEN'),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              // Face Unlock Button
+              const SizedBox(height: 14),
+              // Biometric Face Unlock action button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -122,36 +136,22 @@ class ControlButtons extends StatelessWidget {
                   },
                   icon: const Icon(Icons.face_unlock_rounded, size: 20),
                   label: const Text(
-                    'Face Unlock Door',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    'Face ID Door Access',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E2838),
-                    foregroundColor: const Color(0xFF3D9BFF),
+                    backgroundColor: AppColors.cardElevated,
+                    foregroundColor: AppColors.softPink,
                     side: BorderSide(
-                      color: const Color(0xFF3D9BFF).withValues(alpha: 0.5),
+                      color: AppColors.primaryPink.withValues(alpha: 0.35),
+                      width: 1,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Sweep Test Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => provider.testDoorSweep(),
-                  icon: const Icon(Icons.sync, size: 16),
-                  label: const Text('Test Door Sweep (0° ➔ 90° ➔ 0°)'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF8B909A),
-                    side: const BorderSide(color: Color(0xFF3A3F4B)),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -159,135 +159,166 @@ class ControlButtons extends StatelessWidget {
             ],
           ),
         ),
-        // Bulb & Fan Row
+
+        // 2-Column Device Controls (Bulb & Fan)
         Row(
           children: [
-            // Bulb Card
+            // Light Bulb Card
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1D24),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: state.bulbOn
-                        ? const Color(0xFFFFC43D).withValues(alpha: 0.5)
-                        : Colors.white10,
+              child: GestureDetector(
+                onTap: () => provider.toggleBulb(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardSurface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: state.bulbOn
+                          ? AppColors.primaryPink
+                          : AppColors.cardBorder,
+                      width: state.bulbOn ? 1.5 : 1.0,
+                    ),
+                    boxShadow: state.bulbOn
+                        ? const [
+                            BoxShadow(
+                              color: AppColors.pinkGlow,
+                              blurRadius: 16,
+                              spreadRadius: 1,
+                            )
+                          ]
+                        : null,
                   ),
-                  boxShadow: state.bulbOn
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFFFFC43D).withValues(alpha: 0.15),
-                            blurRadius: 16,
-                            spreadRadius: 1,
-                          )
-                        ]
-                      : null,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(
-                          Icons.lightbulb,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: state.bulbOn
+                                  ? AppColors.primaryPink.withValues(alpha: 0.15)
+                                  : AppColors.cardElevated,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.lightbulb_rounded,
+                              color: state.bulbOn
+                                  ? AppColors.primaryPink
+                                  : AppColors.textMuted,
+                              size: 24,
+                            ),
+                          ),
+                          Switch(
+                            value: state.bulbOn,
+                            onChanged: (_) => provider.toggleBulb(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Main Light',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textWhite,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        state.bulbOn ? 'Active' : 'Off',
+                        style: TextStyle(
+                          fontSize: 12,
                           color: state.bulbOn
-                              ? const Color(0xFFFFC43D)
-                              : const Color(0xFF8B909A),
-                          size: 28,
+                              ? AppColors.primaryPink
+                              : AppColors.textSecondary,
+                          fontWeight: state.bulbOn ? FontWeight.w600 : FontWeight.normal,
                         ),
-                        Switch(
-                          value: state.bulbOn,
-                          onChanged: (_) => provider.toggleBulb(),
-                          activeThumbColor: const Color(0xFFFFC43D),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Bulb Relay',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
-                    ),
-                    Text(
-                      state.bulbOn ? 'ON' : 'OFF',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: state.bulbOn
-                            ? const Color(0xFFFFC43D)
-                            : const Color(0xFF8B909A),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             // Fan Card
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1D24),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: state.fanOn
-                        ? const Color(0xFF3DDC84).withValues(alpha: 0.5)
-                        : Colors.white10,
+              child: GestureDetector(
+                onTap: () => provider.toggleFan(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardSurface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: state.fanOn
+                          ? AppColors.primaryPink
+                          : AppColors.cardBorder,
+                      width: state.fanOn ? 1.5 : 1.0,
+                    ),
+                    boxShadow: state.fanOn
+                        ? const [
+                            BoxShadow(
+                              color: AppColors.pinkGlow,
+                              blurRadius: 16,
+                              spreadRadius: 1,
+                            )
+                          ]
+                        : null,
                   ),
-                  boxShadow: state.fanOn
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF3DDC84).withValues(alpha: 0.15),
-                            blurRadius: 16,
-                            spreadRadius: 1,
-                          )
-                        ]
-                      : null,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(
-                          Icons.mode_fan_off,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: state.fanOn
+                                  ? AppColors.primaryPink.withValues(alpha: 0.15)
+                                  : AppColors.cardElevated,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.air_rounded,
+                              color: state.fanOn
+                                  ? AppColors.primaryPink
+                                  : AppColors.textMuted,
+                              size: 24,
+                            ),
+                          ),
+                          Switch(
+                            value: state.fanOn,
+                            onChanged: (_) => provider.toggleFan(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Ventilation',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textWhite,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        state.fanOn ? 'Active' : 'Off',
+                        style: TextStyle(
+                          fontSize: 12,
                           color: state.fanOn
-                              ? const Color(0xFF3DDC84)
-                              : const Color(0xFF8B909A),
-                          size: 28,
+                              ? AppColors.primaryPink
+                              : AppColors.textSecondary,
+                          fontWeight: state.fanOn ? FontWeight.w600 : FontWeight.normal,
                         ),
-                        Switch(
-                          value: state.fanOn,
-                          onChanged: (_) => provider.toggleFan(),
-                          activeThumbColor: const Color(0xFF3DDC84),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Fan Relay',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
-                    ),
-                    Text(
-                      state.fanOn ? 'ON' : 'OFF',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: state.fanOn
-                            ? const Color(0xFF3DDC84)
-                            : const Color(0xFF8B909A),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../theme/app_theme.dart';
 
 class WaterTankCard extends StatelessWidget {
   const WaterTankCard({super.key});
@@ -9,54 +10,90 @@ class WaterTankCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<HomeProvider>().state;
     final pct = state.tankPercent;
-    final dist = state.tankDistance;
 
-    String subtitle = 'Level unknown';
-    Color waterColor = const Color(0xFF3D9BFF);
+    String statusText = 'Reading…';
+    Color statusColor = AppColors.textSecondary;
 
     if (pct != null) {
-      if (pct < 15) {
-        subtitle = 'Low – refill soon!';
-        waterColor = const Color(0xFFFF453A);
-      } else if (pct > 90) {
-        subtitle = 'Almost full';
-        waterColor = const Color(0xFF32D74B);
+      if (pct < 20) {
+        statusText = 'Low Level';
+        statusColor = AppColors.warning;
+      } else if (pct > 85) {
+        statusText = 'Full';
+        statusColor = AppColors.primaryPink;
       } else {
-        subtitle = 'Level OK';
-        waterColor = const Color(0xFF3D9BFF);
+        statusText = 'Optimal';
+        statusColor = AppColors.online;
       }
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1D24),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white10),
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.cardBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'WATER TANK',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
-              color: Color(0xFF8B909A),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPink.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.water_drop_outlined,
+                      color: AppColors.primaryPink,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Water Reservoir',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textWhite,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Row(
             children: [
-              // Tank Visual Graphic
+              // Stylized Tank Reservoir Graphic
               Container(
-                width: 70,
-                height: 110,
+                width: 68,
+                height: 104,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF12151A),
-                  border: Border.all(color: const Color(0xFF3A3F4B), width: 3),
+                  color: const Color(0xFF0C0D12),
+                  border: Border.all(color: AppColors.cardBorder, width: 2),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
@@ -67,23 +104,37 @@ class WaterTankCard extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
+                    // Liquid level with neon pink & purple gradient
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 700),
                       curve: Curves.easeOutCubic,
-                      height: pct != null ? (pct / 100.0) * 104 : 0,
+                      height: pct != null ? (pct / 100.0) * 100 : 0,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            waterColor,
-                            waterColor.withValues(alpha: 0.7),
-                          ],
+                      decoration: const BoxDecoration(
+                        gradient: AppColors.waterGradient,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(14),
+                          bottomRight: Radius.circular(14),
                         ),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(12),
-                          bottomRight: Radius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.pinkGlow,
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          )
+                        ],
+                      ),
+                    ),
+                    // Glass highlight line
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      bottom: 6,
+                      child: Container(
+                        width: 2,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(1),
                         ),
                       ),
                     ),
@@ -91,7 +142,7 @@ class WaterTankCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 20),
-              // Values and info
+              // Level details & percentage
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,32 +150,37 @@ class WaterTankCard extends StatelessWidget {
                     Text(
                       pct != null ? '$pct%' : '--%',
                       style: const TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: 42,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                        color: AppColors.textWhite,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: pct != null && pct < 15
-                            ? const Color(0xFFFF453A)
-                            : const Color(0xFF8B909A),
+                      pct != null
+                          ? (pct < 20
+                              ? 'Refill recommended'
+                              : 'Capacity is stable')
+                          : 'Awaiting sensor response',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    if (dist != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        'Distance to surface: ${dist.toStringAsFixed(1)} cm',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF636976),
+                    const SizedBox(height: 12),
+                    // Sleek progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: pct != null ? (pct / 100.0).clamp(0.0, 1.0) : 0,
+                        backgroundColor: AppColors.cardBorder,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.primaryPink,
                         ),
+                        minHeight: 5,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),

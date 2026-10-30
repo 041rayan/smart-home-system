@@ -180,41 +180,42 @@ const char PAGE[] PROGMEM = R"rawliteral(
 <meta name="theme-color" content="#0f1115">
 <title>Home</title>
 <style>
-  :root{--bg:#0f1115;--card:#1a1d24;--text:#f2f3f5;--muted:#8b909a;--accent:#ffc43d;--water:#3d9bff;--ok:#3ddc84;--bad:#ff5d5d}
+  :root{--bg:#090a0e;--card:#13141b;--border:#232532;--text:#f8f9fa;--muted:#9ca1b4;--accent:#ff2d78;--water:#ff2d78;--water2:#8b2fc9;--ok:#00e676;--bad:#ff2d55}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;
-       padding:max(18px,env(safe-area-inset-top)) 14px 32px;max-width:520px;margin:auto}
-  h1{font-size:24px;margin:6px 4px 2px}
-  #status{color:var(--muted);font-size:13px;margin:0 4px 14px}
+       padding:max(18px,env(safe-area-inset-top)) 16px 36px;max-width:520px;margin:auto}
+  h1{font-size:24px;margin:6px 4px 2px;font-weight:800;letter-spacing:-0.5px}
+  h1 span{color:var(--accent)}
+  #status{color:var(--muted);font-size:12px;margin:0 4px 16px}
   #status.off{color:var(--bad)}
-  .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px}
-  .card h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:14px}
+  .card h2{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
   .row{display:flex;gap:12px}
-  .row .card{flex:1;margin-bottom:12px}
-  .big{font-size:34px;font-weight:700}
-  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .row .card{flex:1;margin-bottom:14px}
+  .big{font-size:34px;font-weight:800;letter-spacing:-0.5px}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
 
   /* fire */
-  #fire{display:flex;align-items:center;gap:12px}
-  #fire .dot{width:14px;height:14px;border-radius:50%;background:var(--ok)}
-  #fire.alert{background:#4a1616;box-shadow:0 0 0 2px var(--bad);animation:pulse 1s infinite}
-  #fire.alert .dot{background:var(--bad)}
-  @keyframes pulse{50%{opacity:.65}}
+  #fire{display:flex;align-items:center;gap:14px}
+  #fire .dot{width:12px;height:12px;border-radius:50%;background:var(--ok)}
+  #fire.alert{background:#380816;border-color:var(--accent);box-shadow:0 0 20px rgba(255,45,120,.3);animation:pulse 1s infinite}
+  #fire.alert .dot{background:var(--accent)}
+  @keyframes pulse{50%{opacity:.7}}
 
   /* tank */
-  .tankwrap{display:flex;align-items:center;gap:18px}
-  .tank{position:relative;width:84px;height:130px;border:3px solid #3a3f4b;border-radius:10px 10px 18px 18px;overflow:hidden;background:#12151a;flex:none}
-  .water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(var(--water),#2467c4);transition:height .8s}
+  .tankwrap{display:flex;align-items:center;gap:20px}
+  .tank{position:relative;width:76px;height:114px;border:2px solid var(--border);border-radius:8px 8px 16px 16px;overflow:hidden;background:#0c0d12;flex:none}
+  .water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(var(--water),var(--water2));box-shadow:0 0 12px rgba(255,45,120,.4);transition:height .8s}
 
   /* buttons */
-  .btn{width:100%;border:0;border-radius:14px;padding:16px;font-size:16px;font-weight:600;color:var(--text);background:#262a33}
-  .btn:active{transform:scale(.97)}
-  .btn.on{background:#2b2616;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,196,61,.25);color:var(--accent)}
-  .btn.open{background:#14301f;box-shadow:0 0 0 1.5px var(--ok);color:var(--ok)}
+  .btn{width:100%;border:1px solid var(--border);border-radius:14px;padding:14px;font-size:15px;font-weight:600;color:var(--text);background:#1a1b24;cursor:pointer}
+  .btn:active{transform:scale(.98)}
+  .btn.on{background:#2a111c;box-shadow:0 0 16px rgba(255,45,120,.25);border-color:var(--accent);color:var(--accent)}
+  .btn.open{background:#122a1b;box-shadow:0 0 16px rgba(0,230,118,.2);border-color:var(--ok);color:var(--ok)}
 </style>
 </head>
 <body>
-<h1>Home</h1>
+<h1>Smart<span>Home</span></h1>
 <p id="status">Connecting…</p>
 
 <div class="card" id="fire">
