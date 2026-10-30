@@ -57,8 +57,8 @@ const int DOOR_OPEN_ANGLE = 90;
 
 // ---- Logic levels ----
 const bool RELAY_ACTIVE_LOW = true;  // set true if relay turns ON when pin is LOW
-bool flameActiveLow = false;         // false = Active-HIGH (0: no fire, 1: fire detected)
-int rawFlame = 0;                    // raw digital pin reading
+bool flameActiveLow = true;          // true = Active-LOW (LM393 default: DO=1 clear, DO=0 fire)
+int rawFlame = 1;                    // raw digital pin reading (1 = clear in active-low)
 // ==========================================
 
 WebServer server(80);
@@ -125,6 +125,17 @@ float readDistanceCm() {
   return v[n / 2];
 }
 
+void checkFlameSensor() {
+  // Multi-sample debounce (5 samples over 1ms) to eliminate RF spikes & wiper noise
+  int lowCount = 0;
+  for (int i = 0; i < 5; i++) {
+    if (digitalRead(PIN_FLAME) == LOW) lowCount++;
+    delayMicroseconds(200);
+  }
+  rawFlame = (lowCount >= 3) ? LOW : HIGH;
+  fireDetected = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
+}
+
 void updateSensors() {
   // Tank
   tankDistance = readDistanceCm();
@@ -136,8 +147,7 @@ void updateSensors() {
   }
 
   // Fire
-  rawFlame = digitalRead(PIN_FLAME);
-  fireDetected = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
+  checkFlameSensor();
 
   // Temperature / humidity
   float t = dht.readTemperature();
@@ -307,6 +317,7 @@ void handleRoot() {
   server.send_P(200, "text/html", PAGE);
 }
 void handleState() {
+  checkFlameSensor();
   server.send(200, "application/json", stateJson());
 }
 
@@ -394,7 +405,7 @@ void setup() {
 
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
-  pinMode(PIN_FLAME, INPUT);
+  pinMode(PIN_FLAME, INPUT_PULLUP);
   pinMode(PIN_RELAY_BULB, OUTPUT);
   pinMode(PIN_RELAY_FAN, OUTPUT);
   applyBulb();  // bulb off at start
