@@ -195,6 +195,37 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> unlockDoorWithFace() async {
+    try {
+      if (_isDemoMode) {
+        _state = _state.copyWith(doorOpen: true, lastUpdated: DateTime.now());
+        notifyListeners();
+        await Future.delayed(const Duration(seconds: 4));
+        _state = _state.copyWith(doorOpen: false, lastUpdated: DateTime.now());
+        notifyListeners();
+        return true;
+      }
+
+      // Unlock on ESP32
+      await _apiService.setDoor(true);
+      _state = _state.copyWith(doorOpen: true, lastUpdated: DateTime.now());
+      notifyListeners();
+
+      // Keep open for 4 seconds to allow entry
+      await Future.delayed(const Duration(seconds: 4));
+
+      // Auto-lock door
+      final finalState = await _apiService.setDoor(false);
+      _handleStateUpdate(finalState);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Face unlock failed: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> toggleBulb() async {
     if (_isDemoMode) {
       _state = _state.copyWith(

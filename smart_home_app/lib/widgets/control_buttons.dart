@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../screens/face_unlock_screen.dart';
 
 class ControlButtons extends StatelessWidget {
   const ControlButtons({super.key});
@@ -106,7 +107,38 @@ class ControlButtons extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              // Face Unlock Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FaceUnlockScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.face_unlock_rounded, size: 20),
+                  label: const Text(
+                    'Face Unlock Door',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E2838),
+                    foregroundColor: const Color(0xFF3D9BFF),
+                    side: BorderSide(
+                      color: const Color(0xFF3D9BFF).withValues(alpha: 0.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               // Sweep Test Button
               SizedBox(
                 width: double.infinity,
