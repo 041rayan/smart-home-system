@@ -48,7 +48,8 @@ const int DOOR_OPEN_ANGLE = 90;
 
 // ---- Logic levels ----
 const bool RELAY_ACTIVE_LOW = true;  // set true if relay turns ON when pin is LOW
-const bool FLAME_ACTIVE_LOW = true;  // most flame modules output LOW when fire detected
+bool flameActiveLow = false;         // false = Active-HIGH (0: no fire, 1: fire detected)
+int rawFlame = 0;                    // raw digital pin reading
 // ==========================================
 
 WebServer server(80);
@@ -79,7 +80,9 @@ void applyFan() {
 }
 
 void applyDoor() {
-  doorServo.write(doorOpen ? DOOR_OPEN_ANGLE : DOOR_CLOSED_ANGLE);
+  int angle = doorOpen ? DOOR_OPEN_ANGLE : DOOR_CLOSED_ANGLE;
+  doorServo.write(angle);
+  Serial.printf("[DOOR] %s -> servo angle %d° on GPIO %d\n", doorOpen ? "OPEN" : "CLOSED", angle, PIN_SERVO);
 }
 
 float readDistanceOnce() {
@@ -124,8 +127,8 @@ void updateSensors() {
   }
 
   // Fire
-  int f = digitalRead(PIN_FLAME);
-  fireDetected = FLAME_ACTIVE_LOW ? (f == LOW) : (f == HIGH);
+  rawFlame = digitalRead(PIN_FLAME);
+  fireDetected = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
 
   // Temperature / humidity
   float t = dht.readTemperature();
@@ -147,6 +150,8 @@ String stateJson() {
   s += "\"temp\":" + num(tempC) + ",";
   s += "\"hum\":" + num(humidity, 0) + ",";
   s += "\"fire\":" + String(fireDetected ? "true" : "false") + ",";
+  s += "\"fireRaw\":" + String(rawFlame) + ",";
+  s += "\"flameActiveLow\":" + String(flameActiveLow ? "true" : "false") + ",";
   s += "\"door\":" + String(doorOpen ? "true" : "false") + ",";
   s += "\"bulb\":" + String(bulbOn ? "true" : "false") + ",";
   s += "\"fan\":" + String(fanOn ? "true" : "false");
@@ -205,8 +210,9 @@ const char PAGE[] PROGMEM = R"rawliteral(
 
 <div class="card" id="fire">
   <div class="dot"></div>
-  <div><div id="fireTxt" style="font-weight:700;font-size:17px">No fire detected</div>
+  <div style="flex:1"><div id="fireTxt" style="font-weight:700;font-size:17px">No fire detected</div>
        <div class="sub" id="fireSub">Flame sensor OK</div></div>
+  <button class="btn" style="width:auto;padding:8px 12px;font-size:12px;background:#262a33" onclick="invertFlame()">Invert</button>
 </div>
 
 <div class="card">
@@ -226,7 +232,9 @@ const char PAGE[] PROGMEM = R"rawliteral(
 
 <div class="row">
   <div class="card"><h2>Door</h2>
-    <button class="btn" id="doorBtn" onclick="toggleDoor()">--</button></div>
+    <button class="btn" id="doorBtn" onclick="toggleDoor()">--</button>
+    <button class="btn" style="margin-top:6px;padding:8px;font-size:12px;background:#1a1d24" onclick="testDoor()">Test Door</button>
+  </div>
   <div class="card"><h2>Bulb</h2>
     <button class="btn" id="bulbBtn" onclick="toggleBulb()">--</button></div>
   <div class="card">
@@ -252,7 +260,9 @@ function render(){
   const f=$('fire');
   f.classList.toggle('alert',!!S.fire);
   $('fireTxt').textContent=S.fire?'🔥 FIRE DETECTED!':'No fire detected';
-  $('fireSub').textContent=S.fire?'Check immediately':'Flame sensor OK';
+  const pinStr=S.fireRaw===1?'HIGH':'LOW';
+  const modeStr=S.flameActiveLow?'Active-LOW':'Active-HIGH';
+  $('fireSub').textContent=(S.fire?'Check immediately!':'Flame sensor OK')+' • DO pin: '+pinStr+' ('+modeStr+')';
   if(S.fire&&!lastFire&&navigator.vibrate)navigator.vibrate([400,150,400,150,400]);
   lastFire=!!S.fire;
   // door + bulb
@@ -268,6 +278,11 @@ async function api(path){
   }catch(e){$('status').textContent='Disconnected – retrying…';$('status').className='off';}
 }
 function toggleDoor(){S.door=!S.door;render();api('/api/door?open='+(S.door?1:0));}
+function testDoor(){
+  api('/api/door?open=1');
+  setTimeout(()=>api('/api/door?open=0'),2000);
+}
+function invertFlame(){api('/api/flame?invert=1');}
 function toggleBulb(){S.bulb=!S.bulb;render();api('/api/bulb?on='+(S.bulb?1:0));}
 function toggleFan(){S.fan=!S.fan;render();api('/api/fan?on='+(S.fan?1:0));}
 api('/api/state');
@@ -306,8 +321,57 @@ void handleDoor() {
   if (server.hasArg("open")) {
     doorOpen = server.arg("open").toInt() != 0;
     applyDoor();
+  } else if (server.hasArg("angle")) {
+    int a = server.arg("angle").toInt();
+    doorServo.write(a);
+    Serial.printf("[DOOR] Manual angle: %d°\n", a);
   }
   server.send(200, "application/json", stateJson());
+}
+
+void handleFlame() {
+  if (server.hasArg("invert")) {
+    flameActiveLow = !flameActiveLow;
+    updateSensors();
+    Serial.printf("[FLAME] Inverted logic. flameActiveLow=%s (fireDetected=%s)\n",
+                  flameActiveLow ? "true" : "false", fireDetected ? "YES" : "NO");
+  }
+  server.send(200, "application/json", stateJson());
+}
+
+void handleSerial() {
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd.equalsIgnoreCase("open") || cmd.equalsIgnoreCase("door open")) {
+      doorOpen = true;
+      applyDoor();
+    } else if (cmd.equalsIgnoreCase("close") || cmd.equalsIgnoreCase("door close")) {
+      doorOpen = false;
+      applyDoor();
+    } else if (cmd.startsWith("servo ") || cmd.startsWith("angle ")) {
+      int a = cmd.substring(6).toInt();
+      doorServo.write(a);
+      Serial.printf("[DOOR] Servo angle set to %d°\n", a);
+    } else if (cmd.equalsIgnoreCase("invert") || cmd.equalsIgnoreCase("flame invert")) {
+      flameActiveLow = !flameActiveLow;
+      updateSensors();
+      Serial.printf("[FLAME] Inverted logic. flameActiveLow=%s (fireDetected=%s)\n",
+                    flameActiveLow ? "true" : "false", fireDetected ? "YES" : "NO");
+    } else if (cmd.equalsIgnoreCase("test") || cmd.equalsIgnoreCase("door test")) {
+      Serial.println("[DOOR] Testing sweep: Opening (90°)...");
+      doorServo.write(DOOR_OPEN_ANGLE);
+      delay(1500);
+      Serial.println("[DOOR] Closing (0°)...");
+      doorServo.write(DOOR_CLOSED_ANGLE);
+    } else if (cmd.equalsIgnoreCase("status")) {
+      Serial.printf("[STATUS] Fire: %s (Raw DO=%d, Logic=%s) | Door: %s (%d°) | Bulb: %s | Fan: %s\n",
+                    fireDetected ? "ALERT" : "OK", rawFlame,
+                    flameActiveLow ? "Active-LOW" : "Active-HIGH",
+                    doorOpen ? "OPEN" : "CLOSED", doorOpen ? DOOR_OPEN_ANGLE : DOOR_CLOSED_ANGLE,
+                    bulbOn ? "ON" : "OFF", fanOn ? "ON" : "OFF");
+    }
+  }
 }
 
 // ---------- setup / loop ----------
@@ -322,30 +386,16 @@ void setup() {
   applyBulb();  // bulb off at start
   applyFan();   // fan off at start
 
+  // Timers allocation for ESP32Servo
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
   dht.begin();
   doorServo.setPeriodHertz(50);
-  doorServo.attach(PIN_SERVO, 500, 2400);
+  doorServo.attach(PIN_SERVO, 544, 2400); // Standard 544us - 2400us range
   applyDoor();  // door closed at start
-
-  // WiFi.mode(WIFI_STA);
-  // WiFi.begin(WIFI_SSID, WIFI_PASS);
-  // delay(5000);
-  // Serial.print("Connecting to Wi-Fi");
-  // unsigned long t0 = millis();
-  // while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) {
-  //   delay(500);
-  //   Serial.print(".");
-  // }
-  // if (WiFi.status() == WL_CONNECTED) {
-  //   Serial.print("\nIP address: ");
-  //   Serial.println(WiFi.localIP());
-  // } else {
-  //   // Fallback hotspot so you can still reach the app
-  //   WiFi.mode(WIFI_AP);
-  //   WiFi.softAP("ESP32-Home", "12345678");
-  //   Serial.print("\nWi-Fi failed. Hotspot 'ESP32-Home' (pw 12345678) at ");
-  //   Serial.println(WiFi.softAPIP());
-  // }
 
   WiFi.mode(WIFI_AP);
   WiFi.softAP("ESP32-Home", "12345678");
@@ -357,6 +407,7 @@ void setup() {
 
   server.on("/", handleRoot);
   server.on("/api/state", handleState);
+  server.on("/api/flame", handleFlame);
   server.on("/api/bulb", handleBulb);
   server.on("/api/fan", handleFan);
   server.on("/api/door", handleDoor);
@@ -367,10 +418,15 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  handleSerial();
 
-  // Read sensors every 2 seconds (the fire sensor is checked each time too)
+  // Read sensors every 2 seconds
   if (millis() - lastSensorMs >= 2000) {
     lastSensorMs = millis();
     updateSensors();
+    Serial.printf("[STATUS] Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%%\n",
+                  fireDetected ? "FIRE ALERT!" : "OK", rawFlame,
+                  doorOpen ? "OPEN" : "CLOSED",
+                  tempC, humidity, tankPercent);
   }
 }
