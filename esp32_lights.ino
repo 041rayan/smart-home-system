@@ -209,7 +209,7 @@ const char PAGE[] PROGMEM = R"rawliteral(
 <meta name="theme-color" content="#0f1115">
 <title>Home</title>
 <style>
-  :root{--bg:#090a0e;--card:#13141b;--border:#232532;--text:#f8f9fa;--muted:#9ca1b4;--accent:#ff2d78;--water:#ff2d78;--water2:#8b2fc9;--ok:#00e676;--bad:#ff2d55}
+  :root{--bg:#090a0e;--card:#13141b;--border:#232532;--text:#f8f9fa;--muted:#9ca1b4;--accent:#ff2d78;--water:#00f0ff;--water2:#0077b6;--ok:#00e676;--bad:#ff2d55}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;
        padding:max(18px,env(safe-area-inset-top)) 16px 36px;max-width:520px;margin:auto}
@@ -234,7 +234,7 @@ const char PAGE[] PROGMEM = R"rawliteral(
   /* tank */
   .tankwrap{display:flex;align-items:center;gap:20px}
   .tank{position:relative;width:76px;height:114px;border:2px solid var(--border);border-radius:8px 8px 16px 16px;overflow:hidden;background:#0c0d12;flex:none}
-  .water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(var(--water),var(--water2));box-shadow:0 0 12px rgba(255,45,120,.4);transition:height .8s}
+  .water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(var(--water),var(--water2));box-shadow:0 0 12px rgba(0,180,216,.4);transition:height .8s}
 
   /* buttons */
   .btn{width:100%;border:1px solid var(--border);border-radius:14px;padding:14px;font-size:15px;font-weight:600;color:var(--text);background:#1a1b24;cursor:pointer}

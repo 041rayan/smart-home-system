@@ -94,12 +94,24 @@ class ControlButtons extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Lock/Unlock Button
+                  // Lock / Biometric Unlock Action
                   InkWell(
-                    onTap: () => provider.toggleDoor(),
+                    onTap: () {
+                      if (isDoorOpen) {
+                        provider.lockDoor();
+                      } else {
+                        // Enforce biometric authentication to unlock
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const BiometricUnlockScreen(),
+                          ),
+                        );
+                      }
+                    },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         gradient: isDoorOpen ? null : AppColors.primaryPinkGradient,
                         color: isDoorOpen ? AppColors.cardElevated : null,
@@ -108,43 +120,61 @@ class ControlButtons extends StatelessWidget {
                             ? Border.all(color: AppColors.primaryPink.withValues(alpha: 0.5))
                             : null,
                       ),
-                      child: Text(
-                        isDoorOpen ? 'LOCK' : 'UNLOCK',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                          color: isDoorOpen ? AppColors.primaryPink : Colors.white,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isDoorOpen ? Icons.lock_outline_rounded : Icons.fingerprint_rounded,
+                            size: 16,
+                            color: isDoorOpen ? AppColors.primaryPink : Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isDoorOpen ? 'LOCK' : 'BIOMETRIC',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              color: isDoorOpen ? AppColors.primaryPink : Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
-              // Biometric Face Unlock action button
+              // Biometric Unlock action button (Fingerprint & Face)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FaceUnlockScreen(),
-                      ),
-                    );
+                    if (isDoorOpen) {
+                      provider.lockDoor();
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BiometricUnlockScreen(),
+                        ),
+                      );
+                    }
                   },
-                  icon: const Icon(Icons.face_unlock_rounded, size: 20),
-                  label: const Text(
-                    'Face ID Door Access',
-                    style: TextStyle(
+                  icon: Icon(
+                    isDoorOpen ? Icons.lock_rounded : Icons.fingerprint_rounded,
+                    size: 20,
+                  ),
+                  label: Text(
+                    isDoorOpen ? 'Lock Door Now' : 'Biometric Door Access (Fingerprint / Face)',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.cardElevated,
-                    foregroundColor: AppColors.softPink,
+                    foregroundColor: isDoorOpen ? AppColors.primaryPink : AppColors.softPink,
                     side: BorderSide(
                       color: AppColors.primaryPink.withValues(alpha: 0.35),
                       width: 1,

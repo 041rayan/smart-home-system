@@ -1,10 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
-class FaceUnlockService {
-  static final FaceUnlockService _instance = FaceUnlockService._internal();
-  factory FaceUnlockService() => _instance;
-  FaceUnlockService._internal();
+class BiometricService {
+  static final BiometricService _instance = BiometricService._internal();
+  factory BiometricService() => _instance;
+  BiometricService._internal();
 
   final LocalAuthentication _auth = LocalAuthentication();
 
@@ -26,7 +26,9 @@ class FaceUnlockService {
     }
   }
 
-  Future<bool> authenticateWithFace({String reason = 'Scan your face to unlock the door'}) async {
+  Future<bool> authenticateBiometrics({
+    String reason = 'Authenticate with fingerprint or face to unlock door',
+  }) async {
     try {
       final available = await isBiometricsAvailable();
       if (!available) {
@@ -45,4 +47,11 @@ class FaceUnlockService {
       return false;
     }
   }
+
+  // Backwards compatibility alias
+  Future<bool> authenticateWithFace({String reason = 'Authenticate to unlock door'}) =>
+      authenticateBiometrics(reason: reason);
 }
+
+// Backwards-compatible alias
+typedef FaceUnlockService = BiometricService;

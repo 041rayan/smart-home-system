@@ -149,22 +149,29 @@ class HomeProvider extends ChangeNotifier {
   }
 
   // User Actions
-  Future<void> toggleDoor() async {
+  Future<void> lockDoor() async {
     if (_isDemoMode) {
-      _state = _state.copyWith(
-        doorOpen: !_state.doorOpen,
-        lastUpdated: DateTime.now(),
-      );
+      _state = _state.copyWith(doorOpen: false, lastUpdated: DateTime.now());
       notifyListeners();
       return;
     }
 
     try {
-      final newState = await _apiService.setDoor(!_state.doorOpen);
+      final newState = await _apiService.setDoor(false);
       _handleStateUpdate(newState);
       notifyListeners();
     } catch (e) {
-      _errorMessage = 'Failed to toggle door: $e';
+      _errorMessage = 'Failed to lock door: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleDoor() async {
+    if (_state.doorOpen) {
+      await lockDoor();
+    } else {
+      // Security requirement: Door can ONLY be opened with biometric
+      _errorMessage = 'Biometric authentication required to unlock door';
       notifyListeners();
     }
   }
@@ -195,7 +202,7 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> unlockDoorWithFace() async {
+  Future<bool> unlockDoorWithBiometrics() async {
     try {
       if (_isDemoMode) {
         _state = _state.copyWith(doorOpen: true, lastUpdated: DateTime.now());
@@ -220,11 +227,14 @@ class HomeProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = 'Face unlock failed: $e';
+      _errorMessage = 'Biometric unlock failed: $e';
       notifyListeners();
       return false;
     }
   }
+
+  // Backwards compatibility alias
+  Future<bool> unlockDoorWithFace() => unlockDoorWithBiometrics();
 
   Future<void> toggleBulb() async {
     if (_isDemoMode) {

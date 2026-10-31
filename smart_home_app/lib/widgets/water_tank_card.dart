@@ -20,7 +20,7 @@ class WaterTankCard extends StatelessWidget {
         statusColor = AppColors.warning;
       } else if (pct > 85) {
         statusText = 'Full';
-        statusColor = AppColors.primaryPink;
+        statusColor = AppColors.waterBlue;
       } else {
         statusText = 'Optimal';
         statusColor = AppColors.online;
@@ -46,12 +46,12 @@ class WaterTankCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPink.withValues(alpha: 0.12),
+                      color: AppColors.waterBlue.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.water_drop_outlined,
-                      color: AppColors.primaryPink,
+                      color: AppColors.waterBlue,
                       size: 20,
                     ),
                   ),
@@ -118,7 +118,7 @@ class WaterTankCard extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.pinkGlow,
+                            color: AppColors.waterGlow,
                             blurRadius: 10,
                             spreadRadius: 1,
                           )
@@ -176,7 +176,7 @@ class WaterTankCard extends StatelessWidget {
                         value: pct != null ? (pct / 100.0).clamp(0.0, 1.0) : 0,
                         backgroundColor: AppColors.cardBorder,
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.primaryPink,
+                          AppColors.waterBlue,
                         ),
                         minHeight: 5,
                       ),

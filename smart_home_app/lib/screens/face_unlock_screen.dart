@@ -5,20 +5,20 @@ import '../providers/home_provider.dart';
 import '../services/face_unlock_service.dart';
 import '../theme/app_theme.dart';
 
-enum FaceUnlockStatus { idle, scanning, success, failed }
+enum BiometricStatus { idle, scanning, success, failed }
 
-class FaceUnlockScreen extends StatefulWidget {
-  const FaceUnlockScreen({super.key});
+class BiometricUnlockScreen extends StatefulWidget {
+  const BiometricUnlockScreen({super.key});
 
   @override
-  State<FaceUnlockScreen> createState() => _FaceUnlockScreenState();
+  State<BiometricUnlockScreen> createState() => _BiometricUnlockScreenState();
 }
 
-class _FaceUnlockScreenState extends State<FaceUnlockScreen>
+class _BiometricUnlockScreenState extends State<BiometricUnlockScreen>
     with SingleTickerProviderStateMixin {
-  final FaceUnlockService _faceService = FaceUnlockService();
-  FaceUnlockStatus _status = FaceUnlockStatus.idle;
-  String _statusMessage = 'Position your face in front of the camera';
+  final BiometricService _biometricService = BiometricService();
+  BiometricStatus _status = BiometricStatus.idle;
+  String _statusMessage = 'Scan your fingerprint or face to unlock';
   int _countdown = 4;
   Timer? _countdownTimer;
 
@@ -36,9 +36,9 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Auto-trigger biometric scan after screen opens
+    // Auto-trigger biometric prompt after screen transition
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startFaceScan();
+      _startBiometricScan();
     });
   }
 
@@ -49,53 +49,53 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     super.dispose();
   }
 
-  Future<void> _startFaceScan() async {
+  Future<void> _startBiometricScan() async {
     final provider = context.read<HomeProvider>();
 
     setState(() {
-      _status = FaceUnlockStatus.scanning;
-      _statusMessage = 'Verifying facial credentials...';
+      _status = BiometricStatus.scanning;
+      _statusMessage = 'Authenticating biometric credentials...';
     });
 
     if (provider.isDemoMode) {
       await Future.delayed(const Duration(milliseconds: 1200));
-      _onFaceRecognized();
+      _onBiometricRecognized();
       return;
     }
 
-    final isAvailable = await _faceService.isBiometricsAvailable();
+    final isAvailable = await _biometricService.isBiometricsAvailable();
     if (!isAvailable) {
       setState(() {
-        _status = FaceUnlockStatus.failed;
+        _status = BiometricStatus.failed;
         _statusMessage = 'Biometric security not configured on this device.';
       });
       return;
     }
 
-    final success = await _faceService.authenticateWithFace(
-      reason: 'Scan your face to unlock the door',
+    final success = await _biometricService.authenticateBiometrics(
+      reason: 'Scan your fingerprint or face to unlock the door',
     );
 
     if (success && mounted) {
-      _onFaceRecognized();
+      _onBiometricRecognized();
     } else if (mounted) {
       setState(() {
-        _status = FaceUnlockStatus.failed;
-        _statusMessage = 'Authentication unverified. Please try again.';
+        _status = BiometricStatus.failed;
+        _statusMessage = 'Biometric authentication failed. Please try again.';
       });
     }
   }
 
-  void _onFaceRecognized() {
+  void _onBiometricRecognized() {
     final provider = context.read<HomeProvider>();
 
     setState(() {
-      _status = FaceUnlockStatus.success;
-      _statusMessage = 'Identity Confirmed • Door Access Granted';
+      _status = BiometricStatus.success;
+      _statusMessage = 'Biometrics Confirmed • Door Access Granted';
       _countdown = 4;
     });
 
-    provider.unlockDoorWithFace();
+    provider.unlockDoorWithBiometrics();
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -107,7 +107,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
         timer.cancel();
         if (mounted) {
           setState(() {
-            _status = FaceUnlockStatus.idle;
+            _status = BiometricStatus.idle;
             _statusMessage = 'Door locked. Tap below to authenticate.';
           });
         }
@@ -121,19 +121,19 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     IconData centerIcon;
 
     switch (_status) {
-      case FaceUnlockStatus.idle:
+      case BiometricStatus.idle:
         accentColor = AppColors.softPink;
-        centerIcon = Icons.face_rounded;
+        centerIcon = Icons.fingerprint_rounded;
         break;
-      case FaceUnlockStatus.scanning:
+      case BiometricStatus.scanning:
         accentColor = AppColors.primaryPink;
-        centerIcon = Icons.face_retouching_natural_rounded;
+        centerIcon = Icons.fingerprint_rounded;
         break;
-      case FaceUnlockStatus.success:
+      case BiometricStatus.success:
         accentColor = AppColors.online;
         centerIcon = Icons.check_circle_outline_rounded;
         break;
-      case FaceUnlockStatus.failed:
+      case BiometricStatus.failed:
         accentColor = AppColors.fireAlert;
         centerIcon = Icons.error_outline_rounded;
         break;
@@ -195,7 +195,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                               ),
                               Icon(
                                 centerIcon,
-                                size: 84,
+                                size: 88,
                                 color: accentColor,
                               ),
                             ],
@@ -204,11 +204,11 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                       ),
                       const SizedBox(height: 36),
                       Text(
-                        _status == FaceUnlockStatus.success
+                        _status == BiometricStatus.success
                             ? 'ACCESS GRANTED'
-                            : _status == FaceUnlockStatus.scanning
-                                ? 'SCANNING FACE'
-                                : _status == FaceUnlockStatus.failed
+                            : _status == BiometricStatus.scanning
+                                ? 'VERIFYING BIOMETRICS'
+                                : _status == BiometricStatus.failed
                                     ? 'ACCESS DENIED'
                                     : 'DOOR LOCKED',
                         style: TextStyle(
@@ -228,7 +228,7 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
                           height: 1.4,
                         ),
                       ),
-                      if (_status == FaceUnlockStatus.success) ...[
+                      if (_status == BiometricStatus.success) ...[
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -255,17 +255,17 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
               ),
 
               // Action button
-              if (_status != FaceUnlockStatus.scanning) ...[
+              if (_status != BiometricStatus.scanning) ...[
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton.icon(
-                    onPressed: _startFaceScan,
-                    icon: const Icon(Icons.face_unlock_rounded),
+                    onPressed: _startBiometricScan,
+                    icon: const Icon(Icons.fingerprint_rounded),
                     label: Text(
-                      _status == FaceUnlockStatus.failed
-                          ? 'Retry Face Verification'
-                          : 'Authenticate Face',
+                      _status == BiometricStatus.failed
+                          ? 'Retry Biometric Scan'
+                          : 'Authenticate Biometrics',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -289,3 +289,6 @@ class _FaceUnlockScreenState extends State<FaceUnlockScreen>
     );
   }
 }
+
+// Backwards compatibility alias
+typedef FaceUnlockScreen = BiometricUnlockScreen;

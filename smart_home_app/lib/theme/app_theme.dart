@@ -28,10 +28,16 @@ class AppColors {
     colors: [Color(0xFF15161F), Color(0xFF101118)],
   );
 
+  // Aquatic Blue Palette (for Water Indicator)
+  static const Color waterBlue = Color(0xFF00B4D8);
+  static const Color waterDeepBlue = Color(0xFF0077B6);
+  static const Color waterCyan = Color(0xFF00F0FF);
+  static const Color waterGlow = Color(0x4000B4D8);
+
   static const LinearGradient waterGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFF2D78), Color(0xFF8B2FC9)],
+    colors: [Color(0xFF00F0FF), Color(0xFF0077B6)],
   );
 
   // Functional Status Colors
