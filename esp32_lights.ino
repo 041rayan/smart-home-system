@@ -61,7 +61,7 @@ bool flameActiveLow = false;         // false = Active-HIGH (DO=0 clear, DO=1 fl
 int rawFlame = 0;                    // raw digital pin reading (0 = clear in active-high)
 bool rawFire = false;                // true while flame is actively detected
 unsigned long lastFireSeenMs = 0;    // timestamp when flame was last detected
-const unsigned long FIRE_HOLD_MS = 10000; // Hold alert for 10 seconds after flame goes off
+const unsigned long FIRE_HOLD_MS = 5000;  // Hold alert for 5 seconds after flame goes off
 int fireHoldSec = 0;                 // remaining seconds in safety hold window
 // ==========================================
 
@@ -142,9 +142,9 @@ void checkFlameSensor() {
   if (rawFire) {
     lastFireSeenMs = millis();
     fireDetected = true;
-    fireHoldSec = 10;
+    fireHoldSec = 5;
   } else {
-    // Keep alert active for 10 seconds after flame goes off
+    // Keep alert active for 5 seconds after flame goes off
     if (lastFireSeenMs > 0 && (millis() - lastFireSeenMs < FIRE_HOLD_MS)) {
       fireDetected = true;
       fireHoldSec = (int)((FIRE_HOLD_MS - (millis() - lastFireSeenMs) + 999) / 1000);
