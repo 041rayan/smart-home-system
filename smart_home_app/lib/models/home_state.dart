@@ -4,6 +4,7 @@ class HomeState {
   final double? tempC;
   final double? humidity;
   final bool fireDetected;
+  final bool flamePresent;
   final int fireRaw;
   final int fireHold;
   final bool flameActiveLow;
@@ -18,6 +19,7 @@ class HomeState {
     this.tempC,
     this.humidity,
     this.fireDetected = false,
+    this.flamePresent = false,
     this.fireRaw = 0,
     this.fireHold = 0,
     this.flameActiveLow = false,
@@ -34,6 +36,7 @@ class HomeState {
       tempC: null,
       humidity: null,
       fireDetected: false,
+      flamePresent: false,
       fireRaw: 0,
       fireHold: 0,
       flameActiveLow: false,
@@ -68,14 +71,21 @@ class HomeState {
       hum = (json['hum'] as num).toDouble();
     }
 
+    final isFire = json['fire'] == true;
+    final hold = (json['fireHold'] as num?)?.toInt() ?? 0;
+    final bool flame = json['flamePresent'] != null
+        ? (json['flamePresent'] == true)
+        : (isFire && hold == 0);
+
     return HomeState(
       tankPercent: pct,
       tankDistance: dist,
       tempC: temp,
       humidity: hum,
-      fireDetected: json['fire'] == true,
+      fireDetected: isFire,
+      flamePresent: flame,
       fireRaw: (json['fireRaw'] as num?)?.toInt() ?? 0,
-      fireHold: (json['fireHold'] as num?)?.toInt() ?? 0,
+      fireHold: hold,
       flameActiveLow: json['flameActiveLow'] == true,
       doorOpen: json['door'] == true,
       bulbOn: json['bulb'] == true,
@@ -90,6 +100,7 @@ class HomeState {
     double? tempC,
     double? humidity,
     bool? fireDetected,
+    bool? flamePresent,
     int? fireRaw,
     int? fireHold,
     bool? flameActiveLow,
@@ -104,6 +115,7 @@ class HomeState {
       tempC: tempC ?? this.tempC,
       humidity: humidity ?? this.humidity,
       fireDetected: fireDetected ?? this.fireDetected,
+      flamePresent: flamePresent ?? this.flamePresent,
       fireRaw: fireRaw ?? this.fireRaw,
       fireHold: fireHold ?? this.fireHold,
       flameActiveLow: flameActiveLow ?? this.flameActiveLow,

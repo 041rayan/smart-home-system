@@ -91,7 +91,7 @@ class _FireAlertBannerState extends State<FireAlertBanner>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      state.fireHold > 0 && state.fireRaw == 1
+                      state.fireHold > 0 && !state.flamePresent
                           ? 'Flame off • Safety alert active (${state.fireHold}s remaining)'
                           : 'Flame sensor active • Check area immediately',
                       style: const TextStyle(

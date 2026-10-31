@@ -57,8 +57,9 @@ const int DOOR_OPEN_ANGLE = 90;
 
 // ---- Logic levels ----
 const bool RELAY_ACTIVE_LOW = true;  // set true if relay turns ON when pin is LOW
-bool flameActiveLow = true;          // true = Active-LOW (LM393 default: DO=1 clear, DO=0 fire)
-int rawFlame = 1;                    // raw digital pin reading (1 = clear in active-low)
+bool flameActiveLow = false;         // false = Active-HIGH (DO=0 clear, DO=1 flame detected)
+int rawFlame = 0;                    // raw digital pin reading (0 = clear in active-high)
+bool rawFire = false;                // true while flame is actively detected
 unsigned long lastFireSeenMs = 0;    // timestamp when flame was last detected
 const unsigned long FIRE_HOLD_MS = 10000; // Hold alert for 10 seconds after flame goes off
 int fireHoldSec = 0;                 // remaining seconds in safety hold window
@@ -130,13 +131,13 @@ float readDistanceCm() {
 
 void checkFlameSensor() {
   // Multi-sample debounce (5 samples over 1ms) to eliminate RF spikes & wiper noise
-  int lowCount = 0;
+  int highCount = 0;
   for (int i = 0; i < 5; i++) {
-    if (digitalRead(PIN_FLAME) == LOW) lowCount++;
+    if (digitalRead(PIN_FLAME) == HIGH) highCount++;
     delayMicroseconds(200);
   }
-  rawFlame = (lowCount >= 3) ? LOW : HIGH;
-  bool rawFire = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
+  rawFlame = (highCount >= 3) ? HIGH : LOW;
+  rawFire = flameActiveLow ? (rawFlame == LOW) : (rawFlame == HIGH);
 
   if (rawFire) {
     lastFireSeenMs = millis();
@@ -188,6 +189,7 @@ String stateJson() {
   s += "\"hum\":" + num(humidity, 0) + ",";
   s += "\"fire\":" + String(fireDetected ? "true" : "false") + ",";
   s += "\"fireRaw\":" + String(rawFlame) + ",";
+  s += "\"flamePresent\":" + String(rawFire ? "true" : "false") + ",";
   s += "\"fireHold\":" + String(fireHoldSec) + ",";
   s += "\"flameActiveLow\":" + String(flameActiveLow ? "true" : "false") + ",";
   s += "\"door\":" + String(doorOpen ? "true" : "false") + ",";
@@ -424,7 +426,7 @@ void setup() {
 
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
-  pinMode(PIN_FLAME, INPUT_PULLUP);
+  pinMode(PIN_FLAME, INPUT);
   pinMode(PIN_RELAY_BULB, OUTPUT);
   pinMode(PIN_RELAY_FAN, OUTPUT);
   applyBulb();  // bulb off at start
