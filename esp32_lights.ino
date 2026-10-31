@@ -48,8 +48,8 @@ const WiFiCred KNOWN_WIFIS[] = {
 
 // ---- Water tank (distance from sensor to water surface, in cm) ----
 // Sensor is mounted at the top of the tank, pointing down.
-const float TANK_EMPTY_CM = 12.0;  // distance when the tank is EMPTY
-const float TANK_FULL_CM = 2.0;    // distance when the tank is FULL
+const float TANK_EMPTY_CM = 8.6;   // distance when the tank is EMPTY (calibrated to empty pot)
+const float TANK_FULL_CM = 2.0;    // distance when the tank is FULL (safety margin below lid)
 
 // ---- Door servo angles ----
 const int DOOR_CLOSED_ANGLE = 0;
@@ -530,10 +530,10 @@ void loop() {
         fireStr = "FIRE ALERT!";
       }
     }
-    Serial.printf("[STATUS] IP:%s | Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%%\n",
+    Serial.printf("[STATUS] IP:%s | Fire: %s (Raw DO=%d) | Door: %s | Temp: %.1fC | Hum: %.0f%% | Tank: %d%% (dist=%.2f cm)\n",
                   ipStr.c_str(),
                   fireStr.c_str(), rawFlame,
                   doorOpen ? "OPEN" : "CLOSED",
-                  tempC, humidity, tankPercent);
+                  tempC, humidity, tankPercent, tankDistance);
   }
 }
