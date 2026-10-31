@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/home_state.dart';
+import '../models/signed_unlock_token.dart';
+import '../services/ble_door_unlock_interface.dart';
 import '../services/esp32_api_service.dart';
 import '../services/notification_service.dart';
 
@@ -11,6 +13,8 @@ enum ConnectionStatus { disconnected, connecting, connected }
 class HomeProvider extends ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
   late Esp32ApiService _apiService;
+  final SmartDoorUnlockDispatcher _unlockDispatcher = SmartDoorUnlockDispatcher();
+  SignedUnlockToken? _lastSignedToken;
 
   HomeState _state = HomeState.initial();
   ConnectionStatus _connectionStatus = ConnectionStatus.disconnected;
@@ -29,6 +33,7 @@ class HomeProvider extends ChangeNotifier {
   bool get isDemoMode => _isDemoMode;
   bool get isBackgroundMonitoringEnabled => _isBackgroundMonitoringEnabled;
   String? get errorMessage => _errorMessage;
+  SignedUnlockToken? get lastSignedToken => _lastSignedToken;
 
   HomeProvider() {
     _apiService = Esp32ApiService(baseUrl: _esp32Ip);
@@ -230,24 +235,46 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> unlockDoorWithBiometrics() async {
+  Future<void> switchToHotspot() => setEsp32Ip('10.202.5.35');
+  Future<void> switchToWifi() => setEsp32Ip('192.168.0.233');
+
+  Future<bool> unlockDoorWithBiometrics({SignedUnlockToken? token}) async {
     try {
+      if (token != null) {
+        _lastSignedToken = token;
+      }
+
       if (_isDemoMode) {
         _state = _state.copyWith(doorOpen: true, lastUpdated: DateTime.now());
         notifyListeners();
-        await Future.delayed(const Duration(seconds: 4));
+        await Future.delayed(const Duration(seconds: 5));
         _state = _state.copyWith(doorOpen: false, lastUpdated: DateTime.now());
         notifyListeners();
         return true;
       }
 
-      // Unlock on ESP32
-      await _apiService.setDoor(true);
+      // If token provided, dispatch through the secure SmartDoorUnlockDispatcher
+      if (token != null) {
+        final result = await _unlockDispatcher.dispatchUnlock(
+          token: token,
+          esp32TargetIp: _esp32Ip,
+        );
+
+        if (!result.isSuccess) {
+          _errorMessage = 'Unlock transmission failed: ${result.message}';
+          notifyListeners();
+          return false;
+        }
+      } else {
+        // Fallback direct setDoor only if token omitted (e.g. sweep test)
+        await _apiService.setDoor(true);
+      }
+
       _state = _state.copyWith(doorOpen: true, lastUpdated: DateTime.now());
       notifyListeners();
 
-      // Keep open for 4 seconds to allow entry
-      await Future.delayed(const Duration(seconds: 4));
+      // Keep open for 5 seconds to allow entry
+      await Future.delayed(const Duration(seconds: 5));
 
       // Auto-lock door
       final finalState = await _apiService.setDoor(false);

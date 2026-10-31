@@ -85,13 +85,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
+                  runSpacing: 6,
                   children: [
+                    ActionChip(
+                      label: const Text('Phone Hotspot (10.202.5.35)'),
+                      backgroundColor: AppColors.cardElevated,
+                      side: const BorderSide(color: AppColors.online),
+                      labelStyle: const TextStyle(
+                        color: AppColors.online,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      onPressed: () {
+                        _ipController.text = '10.202.5.35';
+                      },
+                    ),
                     ActionChip(
                       label: const Text('Home Wi-Fi (192.168.0.233)'),
                       backgroundColor: AppColors.cardElevated,
                       side: const BorderSide(color: AppColors.cardBorder),
                       labelStyle: const TextStyle(
-                        color: AppColors.online,
+                        color: AppColors.softPink,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -100,11 +114,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     ActionChip(
-                      label: const Text('Direct Hotspot (192.168.4.1)'),
+                      label: const Text('Direct AP (192.168.4.1)'),
                       backgroundColor: AppColors.cardElevated,
                       side: const BorderSide(color: AppColors.cardBorder),
                       labelStyle: const TextStyle(
-                        color: AppColors.softPink,
+                        color: AppColors.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),

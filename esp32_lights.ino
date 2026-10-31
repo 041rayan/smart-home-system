@@ -72,6 +72,8 @@ DHT dht(PIN_DHT, DHT_TYPE);
 bool bulbOn = false;
 bool fanOn = false;
 bool doorOpen = false;
+unsigned long doorOpenMs = 0;
+const unsigned long DOOR_AUTO_CLOSE_MS = 5000;  // Auto-close door after 5 seconds
 bool fireDetected = false;
 
 float tankDistance = -1;  // cm, -1 = invalid
@@ -93,6 +95,9 @@ void applyFan() {
 }
 
 void applyDoor() {
+  if (doorOpen) {
+    doorOpenMs = millis();
+  }
   int angle = doorOpen ? DOOR_OPEN_ANGLE : DOOR_CLOSED_ANGLE;
   doorServo.write(angle);
   Serial.printf("[DOOR] %s -> servo angle %d° on GPIO %d\n", doorOpen ? "OPEN" : "CLOSED", angle, PIN_SERVO);
@@ -510,6 +515,13 @@ unsigned long lastWifiCheck = 0;
 void loop() {
   server.handleClient();
   handleSerial();
+
+  // Hardware auto-close door after 5 seconds
+  if (doorOpen && (millis() - doorOpenMs >= DOOR_AUTO_CLOSE_MS)) {
+    doorOpen = false;
+    applyDoor();
+    Serial.println("[DOOR] Auto-closed after 5 seconds.");
+  }
 
   // Periodically ensure Wi-Fi stays connected
   if (WiFi.status() != WL_CONNECTED && millis() - lastWifiCheck >= 10000) {
