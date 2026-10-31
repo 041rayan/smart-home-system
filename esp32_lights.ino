@@ -57,8 +57,8 @@ const int DOOR_OPEN_ANGLE = 90;
 
 // ---- Logic levels ----
 const bool RELAY_ACTIVE_LOW = true;  // set true if relay turns ON when pin is LOW
-bool flameActiveLow = false;         // false = Active-HIGH (DO=0 clear, DO=1 flame detected)
-int rawFlame = 0;                    // raw digital pin reading (0 = clear in active-high)
+bool flameActiveLow = true;          // true = Active-LOW (DO=1 clear, DO=0 flame detected)
+int rawFlame = 1;                    // raw digital pin reading (1 = clear in active-low)
 bool rawFire = false;                // true while flame is actively detected
 unsigned long lastFireSeenMs = 0;    // timestamp when flame was last detected
 const unsigned long FIRE_HOLD_MS = 5000;  // Hold alert for 5 seconds after flame goes off
@@ -406,6 +406,30 @@ void handleSerial() {
       delay(1500);
       Serial.println("[DOOR] Closing (0°)...");
       doorServo.write(DOOR_CLOSED_ANGLE);
+    } else if (cmd.equalsIgnoreCase("bulb on")) {
+      bulbOn = true;
+      applyBulb();
+      Serial.println("[BULB] Relay 1 ON");
+    } else if (cmd.equalsIgnoreCase("bulb off")) {
+      bulbOn = false;
+      applyBulb();
+      Serial.println("[BULB] Relay 1 OFF");
+    } else if (cmd.equalsIgnoreCase("fan on")) {
+      fanOn = true;
+      applyFan();
+      Serial.println("[FAN] Relay 2 ON");
+    } else if (cmd.equalsIgnoreCase("fan off")) {
+      fanOn = false;
+      applyFan();
+      Serial.println("[FAN] Relay 2 OFF");
+    } else if (cmd.equalsIgnoreCase("relay test")) {
+      Serial.println("[RELAY] Testing Relay 1 (Bulb) ON for 2s...");
+      bulbOn = true; applyBulb(); delay(2000);
+      bulbOn = false; applyBulb();
+      Serial.println("[RELAY] Testing Relay 2 (Fan) ON for 2s...");
+      fanOn = true; applyFan(); delay(2000);
+      fanOn = false; applyFan();
+      Serial.println("[RELAY] Test complete.");
     } else if (cmd.equalsIgnoreCase("status")) {
       Serial.printf("[STATUS] Fire: %s (Raw DO=%d, Logic=%s) | Door: %s (%d°) | Bulb: %s | Fan: %s\n",
                     fireDetected ? "ALERT" : "OK", rawFlame,
