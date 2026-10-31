@@ -94,52 +94,39 @@ class ControlButtons extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Lock / Biometric Unlock Action
-                  InkWell(
-                    onTap: () {
-                      if (isDoorOpen) {
-                        provider.lockDoor();
-                      } else {
-                        // Enforce biometric authentication to unlock
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const BiometricUnlockScreen(),
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        gradient: isDoorOpen ? null : AppColors.primaryPinkGradient,
-                        color: isDoorOpen ? AppColors.cardElevated : null,
-                        borderRadius: BorderRadius.circular(12),
-                        border: isDoorOpen
-                            ? Border.all(color: AppColors.primaryPink.withValues(alpha: 0.5))
-                            : null,
+                  // Status Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isDoorOpen
+                          ? AppColors.primaryPink.withValues(alpha: 0.15)
+                          : AppColors.cardElevated,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDoorOpen
+                            ? AppColors.primaryPink.withValues(alpha: 0.5)
+                            : AppColors.cardBorder,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isDoorOpen ? Icons.lock_outline_rounded : Icons.fingerprint_rounded,
-                            size: 16,
-                            color: isDoorOpen ? AppColors.primaryPink : Colors.white,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isDoorOpen ? Icons.lock_open : Icons.shield_outlined,
+                          size: 13,
+                          color: isDoorOpen ? AppColors.primaryPink : AppColors.online,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          isDoorOpen ? 'UNLOCKED' : 'SECURE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: isDoorOpen ? AppColors.primaryPink : AppColors.online,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            isDoorOpen ? 'LOCK' : 'BIOMETRIC',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              color: isDoorOpen ? AppColors.primaryPink : Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -167,19 +154,20 @@ class ControlButtons extends StatelessWidget {
                   ),
                   label: Text(
                     isDoorOpen ? 'Lock Door Now' : 'Biometric Door Access (Fingerprint / Face)',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
+                      color: isDoorOpen ? AppColors.primaryPink : Colors.white,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.cardElevated,
-                    foregroundColor: isDoorOpen ? AppColors.primaryPink : AppColors.softPink,
+                    backgroundColor: isDoorOpen ? AppColors.cardElevated : AppColors.primaryPink,
+                    foregroundColor: isDoorOpen ? AppColors.primaryPink : Colors.white,
                     side: BorderSide(
-                      color: AppColors.primaryPink.withValues(alpha: 0.35),
+                      color: AppColors.primaryPink.withValues(alpha: isDoorOpen ? 0.35 : 0.8),
                       width: 1,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),

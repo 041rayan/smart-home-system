@@ -215,6 +215,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Immediate high-priority alert with custom vibration and alarm sound whenever the flame sensor detects fire.',
                   style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
                 ),
+                const Divider(color: AppColors.cardBorder, height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Background Safety Guard',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textWhite,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Monitors fire sensor continuously even when app is closed or screen is locked',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: provider.isBackgroundMonitoringEnabled,
+                      activeThumbColor: AppColors.primaryPink,
+                      activeTrackColor: AppColors.primaryPink.withValues(alpha: 0.4),
+                      onChanged: (val) {
+                        provider.setBackgroundMonitoring(val);
+                      },
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 14),
                 OutlinedButton.icon(
                   onPressed: () async {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'providers/home_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/background_monitoring_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
@@ -21,6 +22,9 @@ void main() async {
 
   // Initialize notifications service
   await NotificationService().initialize();
+
+  // Initialize background safety monitoring service
+  await BackgroundMonitoringService.initialize();
 
   runApp(
     MultiProvider(

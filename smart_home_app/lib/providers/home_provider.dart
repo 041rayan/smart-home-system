@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/home_state.dart';
 import '../services/esp32_api_service.dart';
@@ -13,8 +14,9 @@ class HomeProvider extends ChangeNotifier {
 
   HomeState _state = HomeState.initial();
   ConnectionStatus _connectionStatus = ConnectionStatus.disconnected;
-  String _esp32Ip = '192.168.4.1';
+  String _esp32Ip = '192.168.0.233';
   bool _isDemoMode = false;
+  bool _isBackgroundMonitoringEnabled = true;
   String? _errorMessage;
 
   Timer? _pollingTimer;
@@ -25,18 +27,37 @@ class HomeProvider extends ChangeNotifier {
   ConnectionStatus get connectionStatus => _connectionStatus;
   String get esp32Ip => _esp32Ip;
   bool get isDemoMode => _isDemoMode;
+  bool get isBackgroundMonitoringEnabled => _isBackgroundMonitoringEnabled;
   String? get errorMessage => _errorMessage;
 
   HomeProvider() {
     _apiService = Esp32ApiService(baseUrl: _esp32Ip);
+    _initBackgroundListener();
     _loadPreferences();
+  }
+
+  void _initBackgroundListener() {
+    FlutterBackgroundService().on('state_update').listen((event) {
+      if (event != null && !_isDemoMode) {
+        try {
+          final newState = HomeState.fromJson(Map<String, dynamic>.from(event));
+          _handleStateUpdate(newState);
+          _connectionStatus = ConnectionStatus.connected;
+          _errorMessage = null;
+          notifyListeners();
+        } catch (e) {
+          debugPrint('Error parsing state from background service: $e');
+        }
+      }
+    });
   }
 
   Future<void> _loadPreferences() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _esp32Ip = prefs.getString('esp32_ip') ?? '192.168.4.1';
+      _esp32Ip = prefs.getString('esp32_ip') ?? '192.168.0.233';
       _isDemoMode = prefs.getBool('demo_mode') ?? false;
+      _isBackgroundMonitoringEnabled = prefs.getBool('bg_monitoring_enabled') ?? true;
       _apiService = Esp32ApiService(baseUrl: _esp32Ip);
 
       if (_isDemoMode) {
@@ -127,6 +148,13 @@ class HomeProvider extends ChangeNotifier {
       _connectionStatus = ConnectionStatus.disconnected;
       startPolling();
     }
+    notifyListeners();
+  }
+
+  Future<void> setBackgroundMonitoring(bool enabled) async {
+    _isBackgroundMonitoringEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('bg_monitoring_enabled', enabled);
     notifyListeners();
   }
 

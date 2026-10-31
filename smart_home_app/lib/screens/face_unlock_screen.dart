@@ -97,20 +97,10 @@ class _BiometricUnlockScreenState extends State<BiometricUnlockScreen>
 
     provider.unlockDoorWithBiometrics();
 
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      if (_countdown > 1) {
-        setState(() {
-          _countdown--;
-        });
-      } else {
-        timer.cancel();
-        if (mounted) {
-          setState(() {
-            _status = BiometricStatus.idle;
-            _statusMessage = 'Door locked. Tap below to authenticate.';
-          });
-        }
+    // Smoothly return to dashboard after brief confirmation
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
       }
     });
   }
